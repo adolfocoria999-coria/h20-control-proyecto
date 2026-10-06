@@ -12,16 +12,16 @@ class RolSeeder extends Seeder
         DB::table('rols')->insert([
             [
                 'nombre' => 'Superadministrador',
-                'descripcion' => 'Presidente de la OTB. Gestiona usuarios, roles y supervisa el sistema.'
+                'descripcion' => 'Presidente de la OTB. Gestiona usuarios, roles y supervisa el sistema.',
             ],
             [
                 'nombre' => 'Administrador',
-                'descripcion' => 'Secretario de Hacienda. Registra pagos, consumos, socios y emite recibos.'
+                'descripcion' => 'Secretario de Hacienda. Registra pagos, consumos, socios y emite recibos.',
             ],
             [
                 'nombre' => 'Socio Común',
-                'descripcion' => 'Consulta historial de pagos, deudas pendientes y comprobantes.'
-            ]
+                'descripcion' => 'Consulta historial de pagos, deudas pendientes y comprobantes.',
+            ],
         ]);
     }
 }

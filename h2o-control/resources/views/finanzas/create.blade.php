@@ -1,4 +1,3 @@
-<script src="https://cdn.tailwindcss.com"></script>
 <x-app-layout>
     <div class="py-12 bg-sky-200/70 min-h-screen">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -12,6 +11,7 @@
                 <!-- 🟢 Se agregó enctype="multipart/form-data" para permitir subida de archivos -->
                 <form action="{{ route('finanzas.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
+                    <x-errores-formulario />
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Mes -->
@@ -19,18 +19,9 @@
                             <label class="block text-sm font-extrabold text-blue-950 mb-2">Mes</label>
                             <select name="mes" required class="w-full rounded-xl border border-sky-200 px-4 py-3 focus:ring-2 focus:ring-blue-500 font-bold text-blue-900 bg-sky-50">
                                 <option value="" disabled selected>Selecciona un mes</option>
-                                <option value="Enero">Enero</option>
-                                <option value="Febrero">Febrero</option>
-                                <option value="Marzo">Marzo</option>
-                                <option value="Abril">Abril</option>
-                                <option value="Mayo">Mayo</option>
-                                <option value="Junio">Junio</option>
-                                <option value="Julio">Julio</option>
-                                <option value="Agosto">Agosto</option>
-                                <option value="Septiembre">Septiembre</option>
-                                <option value="Octubre">Octubre</option>
-                                <option value="Noviembre">Noviembre</option>
-                                <option value="Diciembre">Diciembre</option>
+                                @foreach(\App\Support\Meses::NOMBRES as $num => $nombre)
+                                    <option value="{{ $num }}" {{ old('mes') == $num ? 'selected' : '' }}>{{ $nombre }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -43,8 +34,9 @@
 
                         <!-- Ingresos -->
                         <div>
-                            <label class="block text-sm font-extrabold text-blue-950 mb-2">Total Ingresos (Bs.)</label>
-                            <input type="number" step="0.01" name="ingresos" required min="0" placeholder="Ej: 5000.00"
+                            <label class="block text-sm font-extrabold text-blue-950 mb-2">Ingresos (Bs.) <span class="font-bold text-sky-700">— sin multas</span></label>
+                            <p class="mb-1.5 text-xs font-bold text-sky-800">Las multas cobradas se suman solas; no las incluyas aquí.</p>
+                            <input type="number" step="0.01" name="ingresos" required min="0" placeholder="Ej: 5000.00" value="{{ old('ingresos') }}"
                                 class="w-full rounded-xl border border-sky-200 px-4 py-3 focus:ring-2 focus:ring-green-500 font-bold text-green-700 bg-sky-50">
                         </div>
 

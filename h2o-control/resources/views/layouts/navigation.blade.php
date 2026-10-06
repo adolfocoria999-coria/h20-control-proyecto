@@ -1,9 +1,9 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="bg-white border-b border-gray-100 print:hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ Auth::user()->rol_id == 3 ? route('socio.consumo') : (Auth::user()->rol_id == 1 ? route('usuarios.index') : route('lecturas.index')) }}">
+                    <a href="{{ Auth::user()->rutaInicio() }}">
                         <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
                     </a>
                 </div>
@@ -11,23 +11,26 @@
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     
                     <!-- 1. VISTA EXCLUSIVA PARA SUPERADMIN -->
-                    @if(Auth::user()->rol_id == 1)
+                    @if(Auth::user()->esSuperAdmin())
                         <x-nav-link :href="route('usuarios.index')" :active="request()->routeIs('usuarios.*')">
                             {{ __('Socios') }}
                         </x-nav-link>
                     @endif
 
                     <!-- 2. VISTAS PARA SUPERADMIN Y ADMIN/HACIENDA (1 y 2) -->
-                    @if(Auth::user()->rol_id == 1 || Auth::user()->rol_id == 2)
+                    @if(Auth::user()->esAdmin())
                         <x-nav-link :href="route('lecturas.index')" :active="request()->routeIs('lecturas.*')">
                             {{ __('Lecturas de Agua') }}
                         </x-nav-link>
                     @endif
                     
                     <!-- 3. VISTA EXCLUSIVA DE CONSUMO PARA SOCIO (3) -->
-                    @if(Auth::user()->rol_id == 3)
+                    @if(Auth::user()->esSocio())
                         <x-nav-link :href="route('socio.consumo')" :active="request()->routeIs('socio.consumo')">
                             {{ __('Mi Consumo de Agua') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('socio.pagos')" :active="request()->routeIs('socio.pagos*')">
+                            {{ __('Mis Pagos') }}
                         </x-nav-link>
                     @endif
 
@@ -41,9 +44,12 @@
                     </x-nav-link>
 
                     <!-- 5. NUEVO MÓDULO DE REPORTES (Solo Admin/SuperAdmin) -->
-                    @if(Auth::user()->rol_id == 1 || Auth::user()->rol_id == 2 || in_array(Auth::user()->email, ['jonh@example.com', 'adolfo@example.com']))
+                    @if(Auth::user()->esAdmin())
                         <x-nav-link :href="route('reportes.index')" :active="request()->routeIs('reportes.*')">
                             {{ __('Reportes') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('historial.index')" :active="request()->routeIs('historial.*')">
+                            {{ __('Historial') }}
                         </x-nav-link>
                     @endif
 
@@ -96,21 +102,24 @@
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
             
-            @if(Auth::user()->rol_id == 1)
+            @if(Auth::user()->esSuperAdmin())
                 <x-responsive-nav-link :href="route('usuarios.index')" :active="request()->routeIs('usuarios.*')">
                     {{ __('Socios') }}
                 </x-responsive-nav-link>
             @endif
 
-            @if(Auth::user()->rol_id == 1 || Auth::user()->rol_id == 2)
+            @if(Auth::user()->esAdmin())
                 <x-responsive-nav-link :href="route('lecturas.index')" :active="request()->routeIs('lecturas.*')">
                     {{ __('Lecturas de Agua') }}
                 </x-responsive-nav-link>
             @endif
 
-            @if(Auth::user()->rol_id == 3)
+            @if(Auth::user()->esSocio())
                 <x-responsive-nav-link :href="route('socio.consumo')" :active="request()->routeIs('socio.consumo')">
                     {{ __('Mi Consumo de Agua') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('socio.pagos')" :active="request()->routeIs('socio.pagos*')">
+                    {{ __('Mis Pagos') }}
                 </x-responsive-nav-link>
             @endif
 
@@ -124,9 +133,12 @@
             </x-responsive-nav-link>
 
             <!-- Reportes para el menú móvil -->
-            @if(Auth::user()->rol_id == 1 || Auth::user()->rol_id == 2 || in_array(Auth::user()->email, ['jonh@example.com', 'adolfo@example.com']))
+            @if(Auth::user()->esAdmin())
                 <x-responsive-nav-link :href="route('reportes.index')" :active="request()->routeIs('reportes.*')">
                     {{ __('Reportes') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('historial.index')" :active="request()->routeIs('historial.*')">
+                    {{ __('Historial') }}
                 </x-responsive-nav-link>
             @endif
 

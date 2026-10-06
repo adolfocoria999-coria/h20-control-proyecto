@@ -1,4 +1,3 @@
-<script src="https://cdn.tailwindcss.com"></script>
 <x-app-layout>
     <div class="py-12 bg-sky-200/70 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -13,13 +12,8 @@
                 
                 <div class="mt-4 md:mt-0 flex flex-wrap gap-3 items-center">
                     <!-- BOTÓN DE DESCARGA: Exclusivo para Admin y Superadmin -->
-                    @if(auth()->check() && (str_contains(strtolower(auth()->user()->rol->nombre ?? ''), 'admin') || str_contains(strtolower(auth()->user()->rol->nombre ?? ''), 'super')))
-                        <a href="{{ route('usuarios.exportar') }}" class="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3.5 rounded-xl font-extrabold shadow-lg shadow-emerald-400/50 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            .Excel
-                        </a>
+                    @if(auth()->user()->esSuperAdmin())
+                        <x-boton-excel :href="route('usuarios.exportar', request()->query())" />
                     @endif
 
                     <a href="{{ route('usuarios.create') }}" class="inline-flex items-center justify-center bg-blue-700 hover:bg-blue-800 text-white px-6 py-3.5 rounded-xl font-extrabold shadow-lg shadow-blue-400/50 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
@@ -31,39 +25,29 @@
                 </div>
             </div>
 
-            <!-- FILTROS SIN FONDO BLANCO -->
-            <div class="mb-4">
+            <!-- FILTROS (se aplican en el servidor para poder paginar) -->
+            <form method="GET" action="{{ route('usuarios.index') }}" class="mb-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    
-                    <!-- 1. Buscar por Nombre -->
                     <div>
-                        <label class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">
-                            Nombre Completo
-                        </label>
-                        <input type="text" id="filtro-nombre" placeholder="🔍 Buscar por nombre..." 
-                               class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50">
+                        <label for="nombre" class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">Nombre o Email</label>
+                        <input type="text" name="nombre" id="nombre" value="{{ request('nombre') }}" placeholder="🔍 Buscar por nombre o email..." class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50">
                     </div>
-
-                    <!-- 2. Buscar por CI -->
                     <div>
-                        <label class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">
-                            Carnet de Identidad
-                        </label>
-                        <input type="text" id="filtro-ci" placeholder="💳 Buscar por CI..." 
-                               class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50">
+                        <label for="ci" class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">Carnet de Identidad</label>
+                        <input type="text" name="ci" id="ci" value="{{ request('ci') }}" placeholder="💳 Buscar por CI..." class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50">
                     </div>
-
-                    <!-- 3. Buscar por Teléfono -->
                     <div>
-                        <label class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">
-                            Teléfono / WhatsApp
-                        </label>
-                        <input type="text" id="filtro-telefono" placeholder="📱 Buscar por teléfono..." 
-                               class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50">
+                        <label for="telefono" class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">Teléfono / WhatsApp</label>
+                        <input type="text" name="telefono" id="telefono" value="{{ request('telefono') }}" placeholder="📱 Buscar por teléfono..." class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50">
                     </div>
-
                 </div>
-            </div>
+                <div class="flex items-center gap-3 mt-3">
+                    <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2.5 rounded-xl font-extrabold text-sm shadow-md transition-all">🔍 Buscar</button>
+                    @if(request('nombre') || request('ci') || request('telefono'))
+                        <a href="{{ route('usuarios.index') }}" class="text-xs font-bold text-red-500 hover:underline">Limpiar filtros</a>
+                    @endif
+                </div>
+            </form>
 
             @if(session('success'))
             <div class="mb-6 p-4 bg-sky-100/90 border-l-4 border-sky-600 rounded-r-xl flex items-center shadow-md">
@@ -76,7 +60,7 @@
 
             <div class="bg-white rounded-2xl shadow-xl shadow-sky-900/10 overflow-hidden border border-sky-100">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-sky-100">
+                    <table class="tabla-responsiva min-w-full divide-y divide-sky-100">
                         <thead class="bg-blue-900 text-white">
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Nombre Completo</th>
@@ -88,10 +72,10 @@
                         </thead>
                         <tbody class="divide-y divide-sky-100/70 bg-white">
                             
-                            @forelse($usuarios->sortBy('name') as $user)
+                            @forelse($usuarios as $user)
                             <tr class="fila-socio hover:bg-sky-50 transition-colors duration-150">
                                 
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td data-label="Nombre Completo" class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-white font-black text-lg shadow-md shadow-blue-500/20">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
@@ -103,13 +87,13 @@
                                     </div>
                                 </td>
                                 
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td data-label="Carnet de Identidad" class="px-6 py-4 whitespace-nowrap">
                                     <span class="ci-socio px-3 py-1.5 inline-flex text-xs font-extrabold rounded-lg bg-sky-100 text-blue-950 border border-sky-200 shadow-sm">
                                         {{ $user->ci ?? 'N/A' }}
                                     </span>
                                 </td>
 
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td data-label="Teléfono / WhatsApp" class="px-6 py-4 whitespace-nowrap">
                                     @if($user->telefono)
                                     <div class="flex items-center text-sm font-bold text-blue-950 telefono-socio">
                                         <span class="w-2 h-2 rounded-full bg-sky-500 mr-2 animate-pulse"></span>
@@ -120,7 +104,7 @@
                                     @endif
                                 </td>
 
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <td data-label="Rol Asignado" class="px-6 py-4 whitespace-nowrap text-center">
                                     @php
                                         $rolNombre = $user->rol->nombre ?? ($user->rol->nombre_rol ?? ($user->rol->name ?? 'Socio Común'));
                                         
@@ -137,7 +121,7 @@
                                     </span>
                                 </td>
 
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <td data-label="Acciones" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end space-x-3">
                                         <a href="{{ route('usuarios.edit', $user->id) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-extrabold shadow-sm transition-all hover:scale-105">
                                             <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +150,7 @@
                                         <svg class="w-12 h-12 text-sky-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                                         </svg>
-                                        <p class="text-base font-bold">No hay socios registrados</p>
+                                        <p class="text-base font-bold">{{ request()->hasAny(['nombre', 'ci', 'telefono']) ? 'Ningún socio coincide con los filtros' : 'No hay socios registrados' }}</p>
                                     </div>
                                 </td>
                             </tr>
@@ -176,44 +160,12 @@
                 </div>
             </div>
 
+            {{-- Paginación (conserva los filtros en los enlaces) --}}
+            <div class="mt-4">
+                {{ $usuarios->links() }}
+            </div>
+
         </div>
     </div>
 
-    <!-- SCRIPT DE FILTRADO MULTI-CAMPO -->
-    <script>
-        const inputNombre = document.getElementById('filtro-nombre');
-        const inputCi = document.getElementById('filtro-ci');
-        const inputTelefono = document.getElementById('filtro-telefono');
-        const filas = document.querySelectorAll('.fila-socio');
-
-        function aplicarFiltros() {
-            let valNombre = inputNombre.value.toLowerCase().trim();
-            let valCi = inputCi.value.toLowerCase().trim();
-            let valTelefono = inputTelefono.value.toLowerCase().trim();
-
-            filas.forEach(function(fila) {
-                let elNombre = fila.querySelector('.nombre-socio');
-                let elCi = fila.querySelector('.ci-socio');
-                let elTelefono = fila.querySelector('.telefono-socio');
-
-                let txtNombre = elNombre ? elNombre.textContent.toLowerCase().trim() : "";
-                let txtCi = elCi ? elCi.textContent.toLowerCase().trim() : "";
-                let txtTelefono = elTelefono ? elTelefono.textContent.toLowerCase().trim() : "";
-
-                let cumpleNombre = valNombre === "" || txtNombre.startsWith(valNombre);
-                let cumpleCi = valCi === "" || txtCi.includes(valCi);
-                let cumpleTelefono = valTelefono === "" || txtTelefono.includes(valTelefono);
-
-                if (cumpleNombre && cumpleCi && cumpleTelefono) {
-                    fila.style.display = '';
-                } else {
-                    fila.style.display = 'none';
-                }
-            });
-        }
-
-        inputNombre.addEventListener('input', aplicarFiltros);
-        inputCi.addEventListener('input', aplicarFiltros);
-        inputTelefono.addEventListener('input', aplicarFiltros);
-    </script>
 </x-app-layout>

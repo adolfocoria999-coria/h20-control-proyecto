@@ -1,5 +1,3 @@
-<script src="https://cdn.tailwindcss.com"></script>
-
 <x-app-layout>
     <div class="py-12 bg-sky-100 min-h-screen">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
@@ -14,6 +12,7 @@
 
                 <form action="{{ route('lecturas.store') }}" method="POST" id="form-lectura">
                     @csrf
+                    <x-errores-formulario />
 
                     <div class="mb-5">
                         <label for="buscar_socio" class="block text-sm font-bold text-blue-950 mb-2">Seleccionar Socio / Vecino:</label>
@@ -42,8 +41,8 @@
                         <div>
                             <label for="mes" class="block text-sm font-bold text-blue-950 mb-2">Mes de Lectura:</label>
                             <select name="mes" id="mes" required class="w-full border border-gray-300 rounded-xl p-3 text-sm font-medium text-gray-800 bg-white">
-                                @foreach(['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] as $m)
-                                    <option value="{{ $m }}" {{ date('n') == $loop->iteration ? 'selected' : '' }}>{{ $m }}</option>
+                                @foreach(\App\Support\Meses::NOMBRES as $num => $nombre)
+                                    <option value="{{ $num }}" {{ old('mes', date('n')) == $num ? 'selected' : '' }}>{{ $nombre }}</option>
                                 @endforeach
                             </select>
                         </div>

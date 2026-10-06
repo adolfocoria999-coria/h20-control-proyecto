@@ -4,7 +4,7 @@
             <div class="bg-white p-6 rounded-2xl shadow-xl">
                 <h3 class="text-xl font-black text-blue-950 mb-4">Configuración de Tarifas de Multas</h3>
                 
-                <form action="{{ route('tarifas.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <form action="{{ route('tarifas-multas.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     @csrf
                     <input type="text" name="nombre" placeholder="Nombre (Ej: Reunión)" class="bg-sky-50 border rounded-xl p-2.5 font-bold text-sm" required>
                     <input type="number" step="0.01" name="monto_predeterminado" placeholder="Monto (Bs.)" class="bg-sky-50 border rounded-xl p-2.5 font-bold text-sm" required>

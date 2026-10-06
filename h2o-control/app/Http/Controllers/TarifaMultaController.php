@@ -2,56 +2,37 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TarifaMultaRequest;
 use App\Models\TarifaMulta;
-use Illuminate\Http\Request;
 
 class TarifaMultaController extends Controller
 {
     public function index()
     {
         $tarifas = TarifaMulta::all();
-        return view('tarifas_multas.index', compact('tarifas'));
+
+        return view('multas.tarifas', compact('tarifas'));
     }
 
-    public function store(Request $request)
+    public function store(TarifaMultaRequest $request)
     {
-        $request->validate([
-            'nombre'               => 'required|string|max:255',
-            'monto_predeterminado' => 'required|numeric|min:0',
-        ]);
-
-        TarifaMulta::create([
-            'nombre'               => $request->nombre,
-            'monto_predeterminado' => $request->monto_predeterminado,
-            'descripcion'          => $request->descripcion ?? null,
-        ]);
+        TarifaMulta::create($request->validated());
 
         return redirect()->route('tarifas-multas.index')
             ->with('success', '¡Tipo de multa creada correctamente!');
     }
 
-    public function update(Request $request, $id)
+    public function update(TarifaMultaRequest $request, TarifaMulta $tarifas_multa)
     {
-        $request->validate([
-            'nombre'               => 'required|string|max:255',
-            'monto_predeterminado' => 'required|numeric|min:0',
-        ]);
-
-        $tarifa = TarifaMulta::findOrFail($id);
-        $tarifa->update([
-            'nombre'               => $request->nombre,
-            'monto_predeterminado' => $request->monto_predeterminado,
-            'descripcion'          => $request->descripcion ?? null,
-        ]);
+        $tarifas_multa->update($request->validated());
 
         return redirect()->route('tarifas-multas.index')
             ->with('success', '¡Tarifa/Multa actualizada correctamente!');
     }
 
-    public function destroy($id)
+    public function destroy(TarifaMulta $tarifas_multa)
     {
-        $tarifa = TarifaMulta::findOrFail($id);
-        $tarifa->delete();
+        $tarifas_multa->delete();
 
         return redirect()->route('tarifas-multas.index')
             ->with('success', 'Tarifa eliminada con éxito.');

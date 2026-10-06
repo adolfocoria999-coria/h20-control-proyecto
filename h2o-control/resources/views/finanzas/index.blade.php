@@ -1,4 +1,3 @@
-<script src="https://cdn.tailwindcss.com"></script>
 <!-- CDN de ApexCharts -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
@@ -16,61 +15,26 @@
                 </div>
                 
                 @php
-                    $rolUsuario = Auth::user()->rol->nombre ?? (Auth::user()->rol->nombre_rol ?? (Auth::user()->rol->name ?? ''));
-                    $nombreRol = strtolower($rolUsuario);
-
-                    // Roles diferenciados para finanzas
-                    $esSuperAdmin = str_contains($nombreRol, 'super');
-                    $esAdmin = $esSuperAdmin || str_contains($nombreRol, 'admin');
+                    $esSuperAdmin = Auth::user()->esSuperAdmin();
+                    $esAdmin = Auth::user()->esAdmin();
                 @endphp
 
-                @if($esAdmin)
-                <div class="mt-4 md:mt-0">
+                <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+                    <x-boton-excel :href="route('finanzas.exportar', request()->query())" />
+
+                    @if($esAdmin)
+                    <a href="{{ route('arqueo.index') }}" class="inline-flex items-center justify-center gap-2 whitespace-nowrap bg-white hover:bg-sky-50 text-blue-900 border-2 border-blue-200 px-5 py-3 rounded-xl font-extrabold text-sm shadow-md">
+                        🧾 Arqueo mensual
+                    </a>
                     <a href="{{ route('finanzas.create') }}" class="inline-flex items-center justify-center bg-blue-700 hover:bg-blue-800 text-white px-6 py-3.5 rounded-xl font-extrabold shadow-lg shadow-blue-400/50 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
                         </svg>
                         Registrar Balance Mensual
                     </a>
+                    @endif
                 </div>
-                @endif
             </div>
-
-            @php
-                $ordenMeses = [
-                    'enero' => 1, 'febrero' => 2, 'marzo' => 3, 'abril' => 4,
-                    'mayo' => 5, 'junio' => 6, 'julio' => 7, 'agosto' => 8,
-                    'septiembre' => 9, 'octubre' => 10, 'noviembre' => 11, 'diciembre' => 12
-                ];
-
-                $balancesOrdenados = collect($balances ?? [])->sortBy(function($item) use ($ordenMeses) {
-                    $numMes = $ordenMeses[strtolower(trim($item->mes))] ?? 99;
-                    return ($item->gestion * 100) + $numMes;
-                });
-
-                // CÁLCULO DINÁMICO DE TARJETAS
-                $gestionFiltro = request('gestion');
-                $mesFiltro = request('mes');
-
-                // Sumamos ingresos y egresos de la lista obtenida
-                $totalIngresos = $balancesOrdenados->sum('ingresos');
-                $totalEgresos = $balancesOrdenados->sum('egresos');
-
-                // Formateo del título dinámico de las tarjetas
-                if ($gestionFiltro && $mesFiltro) {
-                    $etiquetaIngresos = "Ingresos ($mesFiltro $gestionFiltro)";
-                    $etiquetaGastos = "Gastos ($mesFiltro $gestionFiltro)";
-                } elseif ($gestionFiltro) {
-                    $etiquetaIngresos = "Ingresos (Gestión $gestionFiltro)";
-                    $etiquetaGastos = "Gastos (Gestión $gestionFiltro)";
-                } elseif ($mesFiltro) {
-                    $etiquetaIngresos = "Ingresos (Mes $mesFiltro - Todas las Gestiones)";
-                    $etiquetaGastos = "Gastos (Mes $mesFiltro - Todas las Gestiones)";
-                } else {
-                    $etiquetaIngresos = "Ingresos Históricos";
-                    $etiquetaGastos = "Gastos Históricos";
-                }
-            @endphp
 
             <!-- Widgets de Resumen -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -119,6 +83,72 @@
                 </div>
             </div>
 
+            <!-- QR de Pago de la OTB (Superadmin y Hacienda) -->
+            @if($esAdmin)
+            @php
+                $estadoQr = $qr->estado();
+                $badgeQr = match ($estadoQr) {
+                    \App\Services\QrPago::VIGENTE => ['bg-emerald-100 text-emerald-800 border-emerald-200', '✅ Vigente'],
+                    \App\Services\QrPago::POR_VENCER => ['bg-amber-100 text-amber-800 border-amber-200', '⚠️ Por vencer'],
+                    \App\Services\QrPago::VENCIDO => ['bg-red-100 text-red-800 border-red-200', '⛔ Vencido'],
+                    \App\Services\QrPago::SIN_FECHA => ['bg-amber-100 text-amber-800 border-amber-200', '⚠️ Sin fecha'],
+                    default => ['bg-gray-100 text-gray-700 border-gray-200', 'Sin QR'],
+                };
+            @endphp
+            <div id="qr" class="bg-white p-6 rounded-2xl shadow-md border border-sky-100 scroll-mt-6">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h3 class="text-lg font-black text-blue-950">QR de Pago de la OTB</h3>
+                        <p class="text-xs font-bold text-sky-800">Los socios lo ven en "Mi Consumo" mientras esté vigente. Se avisa {{ \App\Services\QrPago::DIAS_AVISO }} días antes de que venza.</p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-black border {{ $badgeQr[0] }}">{{ $badgeQr[1] }}</span>
+                </div>
+
+                @if($errors->qr->any())
+                    <div class="mb-4 p-3 bg-red-100 border-l-4 border-red-500 rounded-r-xl text-xs font-bold text-red-800">
+                        @foreach($errors->qr->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
+
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="w-40 h-40 shrink-0 bg-sky-50 rounded-xl border border-sky-100 flex items-center justify-center overflow-hidden">
+                        @if($qr->existe())
+                            <img src="{{ $qr->url() }}" alt="QR de pago de la OTB" class="w-full h-full object-contain bg-white {{ $estadoQr === \App\Services\QrPago::VENCIDO ? 'opacity-40 grayscale' : '' }}">
+                        @else
+                            <span class="text-xs font-bold text-sky-700 text-center px-2">Aún no se cargó un QR</span>
+                        @endif
+                    </div>
+
+                    <form action="{{ route('finanzas.qr') }}" method="POST" enctype="multipart/form-data" class="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @csrf
+                        <div class="md:col-span-2 text-sm font-bold text-blue-950">
+                            {{ $qr->mensaje() }}
+                        </div>
+                        <div>
+                            <label for="qr_imagen" class="block text-xs font-extrabold text-blue-950 mb-1.5">
+                                {{ $qr->existe() ? 'Reemplazar imagen (opcional)' : 'Imagen del QR' }} — PNG o JPG, máx. 2 MB
+                            </label>
+                            <input type="file" name="qr_imagen" id="qr_imagen" accept=".png,.jpg,.jpeg" {{ $qr->existe() ? '' : 'required' }}
+                                   class="w-full text-xs font-bold text-blue-950 bg-sky-50 border border-sky-200 rounded-xl p-2.5 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-700 file:px-3 file:py-1.5 file:text-white file:font-bold">
+                        </div>
+                        <div>
+                            <label for="qr_vence_el" class="block text-xs font-extrabold text-blue-950 mb-1.5">Fecha de vencimiento del QR</label>
+                            <input type="date" name="qr_vence_el" id="qr_vence_el" min="{{ date('Y-m-d') }}" required
+                                   value="{{ old('qr_vence_el', $qr->venceEl?->format('Y-m-d')) }}"
+                                   class="w-full bg-sky-50 border border-sky-200 rounded-xl p-2.5 font-bold text-sm text-blue-950 focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="md:col-span-2 flex justify-end">
+                            <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2.5 rounded-xl font-extrabold text-sm shadow-md transition-all">
+                                Guardar QR
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            @endif
+
             <!-- Barra de Filtros y Botón de Excel -->
             <div class="bg-white p-4 rounded-2xl shadow-md border border-sky-100 flex flex-wrap items-center justify-between gap-4">
                 <form id="formFiltros" method="GET" action="{{ route('finanzas.index') }}" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
@@ -138,11 +168,8 @@
                         <label for="mes" class="text-sm font-extrabold text-blue-950 whitespace-nowrap">Mes:</label>
                         <select name="mes" id="mes" onchange="aplicarFiltro(this.form)" class="bg-sky-50 border border-sky-200 text-blue-950 font-bold text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[160px] px-4 py-2.5 cursor-pointer">
                             <option value="">Todos los meses</option>
-                            @php
-                                $listaMeses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                            @endphp
-                            @foreach($listaMeses as $m)
-                                <option value="{{ $m }}" {{ request('mes') == $m ? 'selected' : '' }}>{{ $m }}</option>
+                            @foreach(\App\Support\Meses::NOMBRES as $num => $nombre)
+                                <option value="{{ $num }}" {{ $mes == $num ? 'selected' : '' }}>{{ $nombre }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -151,14 +178,6 @@
                 <div class="flex items-center gap-3">
                     <a href="{{ route('finanzas.index') }}" onclick="limpiarFiltrosGuardados()" class="text-xs font-bold text-red-500 hover:underline {{ (request('gestion') || request('mes')) ? '' : 'hidden' }}" id="btnLimpiar">
                         Limpiar Filtros
-                    </a>
-
-                    <!-- BOTÓN EXPORTAR A EXCEL -->
-                    <a href="{{ route('finanzas.exportar', ['gestion' => request('gestion'), 'mes' => request('mes')]) }}" class="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-extrabold text-sm shadow-md transition-all duration-200 ease-in-out">
-                        <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        .Excel
                     </a>
                 </div>
             </div>
@@ -172,7 +191,7 @@
             <!-- Tabla de Balances -->
             <div class="bg-white rounded-2xl shadow-xl shadow-sky-900/10 overflow-hidden border border-sky-100">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-sky-100 table-fixed">
+                    <table class="tabla-responsiva min-w-full divide-y divide-sky-100 table-fixed">
                         <thead class="bg-blue-900 text-white">
                             <tr>
                                 <th class="w-1/6 px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Periodo</th>
@@ -187,24 +206,27 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-sky-100/70 bg-white">
-                            @forelse($balancesOrdenados as $balance)
+                            @forelse($balances as $balance)
                             <tr class="hover:bg-sky-50 transition-colors duration-150">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-extrabold text-blue-950">{{ $balance->mes }}</div>
+                                <td data-label="Periodo" class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-extrabold text-blue-950">{{ $balance->mes_nombre }}</div>
                                     <div class="text-xs text-blue-700 font-bold">Gestión {{ $balance->gestion }}</div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-bold text-green-600">+ Bs. {{ number_format($balance->ingresos, 2) }}</span>
+                                <td data-label="Ingresos" class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm font-bold text-green-600">+ Bs. {{ number_format($balance->ingresos_totales, 2) }}</span>
+                                    @if($balance->ingresos_multas > 0)
+                                        <div class="text-xs font-bold text-sky-700 mt-0.5" title="Se suma automáticamente al cobrar multas">incl. Bs. {{ number_format($balance->ingresos_multas, 2) }} de multas</div>
+                                    @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td data-label="Egresos" class="px-6 py-4 whitespace-nowrap">
                                     <span class="text-sm font-bold text-red-600">- Bs. {{ number_format($balance->egresos, 2) }}</span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td data-label="Saldo Final" class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-3 py-1.5 inline-flex text-xs font-extrabold rounded-lg bg-sky-100 text-blue-950 border border-sky-200">
                                         Bs. {{ number_format($balance->saldo_final, 2) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 max-w-xs break-all whitespace-normal">
+                                <td data-label="Detalles" class="px-6 py-4 max-w-xs break-all whitespace-normal">
                                     @php $detalle = $balance->detalle ?? 'Sin observaciones'; @endphp
                                     @if(strlen($detalle) > 45)
                                         <div class="text-xs text-sky-900 break-all leading-relaxed">
@@ -218,14 +240,14 @@
                                         <p class="text-xs text-sky-900 break-all leading-relaxed">{{ $detalle }}</p>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <td data-label="Respaldo" class="px-6 py-4 whitespace-nowrap text-center">
                                     @if($balance->comprobante_url)
                                         <div class="flex items-center justify-center space-x-2">
-                                            <a href="{{ asset('storage/' . $balance->comprobante_url) }}" target="_blank" title="Ver documento"
+                                            <a href="{{ route('finanzas.comprobante', $balance) }}" target="_blank" title="Ver documento"
                                                class="inline-flex items-center px-2.5 py-1 bg-sky-100 text-sky-800 rounded-lg font-bold text-xs hover:bg-sky-200 transition-all border border-sky-200">
                                                 👁️ Ver
                                             </a>
-                                            <a href="{{ asset('storage/' . $balance->comprobante_url) }}" download title="Descargar documento"
+                                            <a href="{{ route('finanzas.comprobante', [$balance, 'descargar' => 1]) }}" title="Descargar documento"
                                                class="inline-flex items-center px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-bold text-xs hover:bg-emerald-200 transition-all border border-emerald-200">
                                                 📥 Descargar
                                             </a>
@@ -235,7 +257,7 @@
                                     @endif
                                 </td>
                                 @if($esAdmin)
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <td data-label="Acciones" class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end space-x-2">
                                         <a href="{{ route('finanzas.edit', $balance->id) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-extrabold shadow-sm transition-all hover:scale-105">
                                             Editar
@@ -330,21 +352,7 @@
             }
 
             // --- APEXCHARTS CONFIG ---
-            @php
-                $mesesGrafico = [];
-                $ingresosGrafico = [];
-                $egresosGrafico = [];
-                
-                if(isset($balancesOrdenados)) {
-                    foreach($balancesOrdenados as $b) {
-                        $mesesGrafico[] = $b->mes . ' ' . $b->gestion;
-                        $ingresosGrafico[] = (float)$b->ingresos;
-                        $egresosGrafico[] = (float)$b->egresos;
-                    }
-                }
-            @endphp
-
-            const totalDatos = @json(count($mesesGrafico));
+            const totalDatos = @json(count($grafico['meses']));
             const chartElement = document.querySelector("#chartFinanzas");
 
             if (totalDatos > 12) {
@@ -356,10 +364,10 @@
             var options = {
                 series: [{
                     name: 'Ingresos (Bs.)',
-                    data: @json($ingresosGrafico)
+                    data: @json($grafico['ingresos'])
                 }, {
                     name: 'Gastos (Bs.)',
-                    data: @json($egresosGrafico)
+                    data: @json($grafico['egresos'])
                 }],
                 chart: {
                     type: 'bar',
@@ -378,7 +386,7 @@
                 stroke: { show: true, width: 2, colors: ['transparent'] },
                 colors: ['#10B981', '#EF4444'],
                 xaxis: {
-                    categories: @json($mesesGrafico),
+                    categories: @json($grafico['meses']),
                     labels: {
                         rotate: totalDatos > 12 ? -45 : 0,
                         style: { fontSize: '11px', fontWeight: 600 }

@@ -1,3 +1,82 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Alpine.js: oculta los elementos con x-cloak hasta que Alpine los inicializa */
+[x-cloak] {
+    display: none !important;
+}
+
+/*
+ * Tablas responsivas: en pantallas angostas cada fila se muestra como una tarjeta
+ * y cada celda como "ETIQUETA ......... valor". La etiqueta sale del atributo
+ * data-label de cada <td>. En pantallas medianas o grandes la tabla no cambia.
+ */
+@media (max-width: 767px) {
+    .tabla-responsiva thead {
+        display: none;
+    }
+
+    .tabla-responsiva,
+    .tabla-responsiva tbody,
+    .tabla-responsiva tr,
+    .tabla-responsiva td {
+        display: block;
+        width: 100%;
+    }
+
+    .tabla-responsiva tr {
+        padding: 0.5rem 0;
+    }
+
+    .tabla-responsiva td {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.25rem 1rem;
+        padding: 0.45rem 1rem;
+        text-align: right;
+        white-space: normal;
+        max-width: none;
+    }
+
+    .tabla-responsiva td::before {
+        content: attr(data-label);
+        flex-shrink: 0;
+        max-width: 45%;
+        text-align: left;
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #1e3a8a;
+    }
+
+    /* Ningún valor (distintivos, correos largos) se sale de la tarjeta */
+    .tabla-responsiva td > * {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    /* Celdas sin etiqueta (mensaje de "sin resultados") ocupan todo el ancho */
+    .tabla-responsiva td:not([data-label]) {
+        display: block;
+        text-align: center;
+    }
+
+    .tabla-responsiva td:not([data-label])::before {
+        content: none;
+    }
+
+    /* La primera celda funciona como título de la tarjeta */
+    .tabla-responsiva td[data-label]:first-child {
+        justify-content: flex-start;
+        text-align: left;
+        font-size: 1rem;
+    }
+
+    .tabla-responsiva td[data-label]:first-child::before {
+        content: none;
+    }
+}

@@ -1,17 +1,17 @@
-<script src="https://cdn.tailwindcss.com"></script>
 <x-app-layout>
     <div class="py-12 bg-sky-200/70 min-h-screen">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <div class="mb-6">
                 <h2 class="font-extrabold text-3xl text-blue-950 leading-tight">Editar Balance</h2>
-                <p class="text-sm text-sky-900 mt-1 font-bold">Modificando el registro de {{ $balance->mes }} {{ $balance->gestion }}</p>
+                <p class="text-sm text-sky-900 mt-1 font-bold">Modificando el registro de {{ $balance->mes_nombre }} {{ $balance->gestion }}</p>
             </div>
 
             <div class="bg-white rounded-2xl shadow-xl border border-sky-100 p-8">
                 <!-- 🟢 Se agregó enctype="multipart/form-data" -->
                 <form action="{{ route('finanzas.update', $balance->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
+                    <x-errores-formulario />
                     @method('PUT')
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -19,9 +19,8 @@
                         <div>
                             <label class="block text-sm font-extrabold text-blue-950 mb-2">Mes</label>
                             <select name="mes" required class="w-full rounded-xl border border-sky-200 px-4 py-3 focus:ring-2 focus:ring-blue-500 font-bold text-blue-900 bg-sky-50">
-                                @php $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']; @endphp
-                                @foreach($meses as $mes)
-                                    <option value="{{ $mes }}" {{ $balance->mes == $mes ? 'selected' : '' }}>{{ $mes }}</option>
+                                @foreach(\App\Support\Meses::NOMBRES as $num => $nombre)
+                                    <option value="{{ $num }}" {{ old('mes', $balance->mes) == $num ? 'selected' : '' }}>{{ $nombre }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -35,9 +34,12 @@
 
                         <!-- Ingresos -->
                         <div>
-                            <label class="block text-sm font-extrabold text-blue-950 mb-2">Total Ingresos (Bs.)</label>
-                            <input type="number" step="0.01" name="ingresos" required min="0" value="{{ $balance->ingresos }}"
+                            <label class="block text-sm font-extrabold text-blue-950 mb-2">Ingresos (Bs.) <span class="font-bold text-sky-700">— sin multas</span></label>
+                            <input type="number" step="0.01" name="ingresos" required min="0" value="{{ old('ingresos', $balance->ingresos) }}"
                                 class="w-full rounded-xl border border-sky-200 px-4 py-3 focus:ring-2 focus:ring-green-500 font-bold text-green-700 bg-sky-50">
+                            @if($balance->ingresos_multas > 0)
+                                <p class="mt-1.5 text-xs font-bold text-sky-800">➕ Además se suman automáticamente Bs. {{ number_format($balance->ingresos_multas, 2) }} de multas cobradas este mes.</p>
+                            @endif
                         </div>
 
                         <!-- Egresos -->
@@ -62,7 +64,7 @@
                         @if($balance->comprobante_url)
                             <div class="mb-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center justify-between">
                                 <span class="text-sm font-bold text-emerald-800">✅ Ya existe un comprobante subido.</span>
-                                <a href="{{ asset('storage/' . $balance->comprobante_url) }}" target="_blank" class="text-xs font-extrabold text-emerald-700 hover:text-emerald-900 underline">
+                                <a href="{{ route('finanzas.comprobante', $balance) }}" target="_blank" class="text-xs font-extrabold text-emerald-700 hover:text-emerald-900 underline">
                                     Ver archivo actual
                                 </a>
                             </div>

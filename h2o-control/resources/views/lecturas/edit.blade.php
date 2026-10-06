@@ -1,5 +1,3 @@
-<script src="https://cdn.tailwindcss.com"></script>
-
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -13,6 +11,7 @@
                 
                 <form action="{{ route('lecturas.update', $lectura->id) }}" method="POST">
                     @csrf
+                    <x-errores-formulario />
                     @method('PUT')
 
                     <div class="mb-4">
@@ -37,8 +36,8 @@
                         <div style="flex: 1;">
                             <label for="mes" class="block text-sm font-medium text-gray-700 mb-2">Mes</label>
                             <select name="mes" id="mes" class="w-full" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
-                                @foreach(['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] as $m)
-                                    <option value="{{ $m }}" {{ $lectura->mes == $m ? 'selected' : '' }}>{{ $m }}</option>
+                                @foreach(\App\Support\Meses::NOMBRES as $num => $nombre)
+                                    <option value="{{ $num }}" {{ old('mes', $lectura->mes) == $num ? 'selected' : '' }}>{{ $nombre }}</option>
                                 @endforeach
                             </select>
                         </div>

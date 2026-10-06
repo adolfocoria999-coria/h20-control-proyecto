@@ -1,5 +1,3 @@
-<script src="https://cdn.tailwindcss.com"></script>
-
 <x-app-layout>
     <div class="py-12 bg-sky-200/70 min-h-screen">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,23 +57,13 @@
                         <select name="tarifa_multa_id" id="tarifa_multa_id" onchange="actualizarMonto()" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-3 font-bold text-sm text-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                             <option value="" disabled selected>-- Seleccione una Infracción --</option>
                             
-                            <!-- TARIFAS PRINCIPALES -->
-                            <option value="1" data-monto="30.00">Inasistencia a Reunión / Asamblea</option>
-                            <option value="2" data-monto="50.00">Inasistencia a Desfile Cívico</option>
-                            <option value="3" data-monto="80.00">Inasistencia a Trabajo Comunal</option>
+                            @foreach($tarifas as $t)
+                                <option value="{{ $t->id }}" data-monto="{{ $t->monto_predeterminado }}" {{ old('tarifa_multa_id') == $t->id ? 'selected' : '' }}>
+                                    {{ $t->nombre }} - (Bs. {{ number_format($t->monto_predeterminado, 2) }})
+                                </option>
+                            @endforeach
 
-                            <!-- TARIFAS ADICIONALES BASE DE DATOS -->
-                            @if(isset($tarifas) && count($tarifas) > 0)
-                                @foreach($tarifas as $t)
-                                    @if(!in_array($t->id, [1, 2, 3]))
-                                        <option value="{{ $t->id }}" data-monto="{{ $t->monto_predeterminado }}">
-                                            {{ $t->nombre }} - (Bs. {{ number_format($t->monto_predeterminado, 2) }})
-                                        </option>
-                                    @endif
-                                @endforeach
-                            @endif
-
-                            <option value="otro" data-monto="0">📌 Otro (Detallar motivo obligatoriamente)</option>
+                            <option value="otro" data-monto="0" {{ old('tarifa_multa_id') === 'otro' ? 'selected' : '' }}>📌 Otro (Detallar motivo obligatoriamente)</option>
                         </select>
                     </div>
 
@@ -137,7 +125,7 @@
             const txtTipoTexto = document.getElementById('tipo_multa_texto');
             
             // Guarda el texto visible de la opción (limpiando sufijos de monto si existen)
-            txtTipoTexto.value = selectedOption.text.split(' - (Bs.')[0].trim();
+            txtTipoTexto.value = select.value === 'otro' ? '' : selectedOption.text.split(' - (Bs.')[0].trim();
 
             if (monto !== null) {
                 document.getElementById('monto').value = monto;

@@ -1,5 +1,3 @@
-<script src="https://cdn.tailwindcss.com"></script>
-
 <x-app-layout>
     <div class="py-10 bg-sky-200/70 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -12,11 +10,11 @@
                 </div>
 
                 <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('reportes.exportar', request()->query()) }}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-5 py-3 rounded-xl shadow-lg transition-all text-sm flex items-center gap-2">
-                        .Excel
-                    </a>
+                    <x-boton-excel :href="route('reportes.exportar', request()->query())" />
                 </div>
             </div>
+
+            <x-mensajes-sesion class="mb-6" />
 
             <!-- Tarjetas de Resumen KPI -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -88,8 +86,9 @@
                     <div>
                         <label class="block text-xs font-bold text-blue-950 mb-1">Gestión / Año:</label>
                         <select name="gestion" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-2.5 font-bold text-xs text-blue-950 focus:ring-2 focus:ring-blue-500 transition-all">
-                            <option value="2026" {{ request('gestion', '2026') == '2026' ? 'selected' : '' }}>Gestión 2026</option>
-                            <option value="2025" {{ request('gestion') == '2025' ? 'selected' : '' }}>Gestión 2025</option>
+                            @foreach($gestiones as $anio)
+                                <option value="{{ $anio }}" {{ $gestion == $anio ? 'selected' : '' }}>Gestión {{ $anio }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -128,7 +127,7 @@
                 </div>
 
                 <div class="w-full overflow-x-auto">
-                    <div class="min-w-[600px] py-2">
+                    <div class="md:min-w-[600px] py-2">
                         <div id="chartUnificado"></div>
                     </div>
                 </div>
@@ -147,7 +146,7 @@
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="tabla-responsiva w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-sky-900 text-white text-xs uppercase tracking-wider font-extrabold">
                                 <th class="py-4 px-6">Socio / Afiliado</th>
@@ -161,22 +160,26 @@
                         <tbody class="divide-y divide-sky-100 text-sm font-semibold text-gray-700">
                             @forelse($sociosMorosos as $socio)
                                 <tr class="hover:bg-sky-50 transition-all">
-                                    <td class="py-4 px-6">
+                                    <td data-label="Socio / Afiliado" class="py-4 px-6">
                                         <p class="font-bold text-blue-950">{{ $socio->name }}</p>
                                         <p class="text-xs text-gray-500">CI: {{ $socio->ci ?? 'Sin CI' }}</p>
                                     </td>
 
                                     <!-- Escala de colores para los meses en mora -->
-                                    <td class="py-4 px-6 text-center">
-                                        @if($socio->cant_meses_mora >= 3)
+                                    <td data-label="Meses" class="py-4 px-6 text-center">
+                                        @if($socio->cant_meses_mora === 0)
+                                            <span class="px-3 py-1 bg-gray-100 text-gray-700 border border-gray-300 rounded-full text-xs font-black shadow-sm">
+                                                Solo multas
+                                            </span>
+                                        @elseif(\App\Services\AvisoDeuda::esCorte($socio))
                                             <!-- 3 o más meses: Fondo rojo claro con letras rojo oscuro -->
                                             <span class="px-3 py-1 bg-red-100 text-red-700 border border-red-300 rounded-full text-xs font-black shadow-sm">
                                                 {{ $socio->cant_meses_mora }} Meses
                                             </span>
-                                        @elseif($socio->cant_meses_mora == 2)
-                                            <!-- 2 meses: AMARILLO -->
+                                        @elseif($socio->cant_meses_mora >= 2)
+                                            <!-- 2 meses o más (sin llegar al corte): AMARILLO -->
                                             <span class="px-3 py-1 bg-amber-100 text-amber-800 border border-amber-300 rounded-full text-xs font-black shadow-sm">
-                                                2 Meses
+                                                {{ $socio->cant_meses_mora }} Meses
                                             </span>
                                         @else
                                             <!-- 1 mes: VERDE -->
@@ -186,26 +189,31 @@
                                         @endif
                                     </td>
 
-                                    <td class="py-4 px-6 text-right font-extrabold text-sky-900">
+                                    <td data-label="Monto Agua (Bs.)" class="py-4 px-6 text-right font-extrabold text-sky-900">
                                         Bs. {{ number_format($socio->deuda_agua, 2) }}
                                     </td>
 
-                                    <td class="py-4 px-6 text-right font-extrabold text-amber-600">
+                                    <td data-label="Monto Multas (Bs.)" class="py-4 px-6 text-right font-extrabold text-amber-600">
                                         Bs. {{ number_format($socio->deuda_multas, 2) }}
                                     </td>
 
-                                    <td class="py-4 px-6 text-right font-black text-red-600">
+                                    <td data-label="Total Acumulado" class="py-4 px-6 text-right font-black text-red-600">
                                         Bs. {{ number_format($socio->deuda_total, 2) }}
                                     </td>
 
-                                    <td class="py-4 px-6 text-center">
-                                        @if($socio->cant_meses_mora >= 3)
-                                            <span class="px-3 py-1.5 bg-red-100 text-red-800 rounded-lg text-xs font-black border border-red-300 inline-block shadow-sm">
-                                                🚨 Corte de Agua
-                                            </span>
+                                    <td data-label="Acción Recomendada" class="py-4 px-6 text-center">
+                                        @php $corte = \App\Services\AvisoDeuda::esCorte($socio); @endphp
+                                        @if(\App\Support\WhatsApp::numero($socio->telefono))
+                                            <a href="{{ route('reportes.notificar', ['socio' => $socio->id, 'gestion' => $gestion, 'mes' => $mesSel ?: null]) }}"
+                                               target="_blank" rel="noopener"
+                                               title="Abre WhatsApp con el mensaje listo para enviar a {{ $socio->telefono }}"
+                                               class="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-black border shadow-sm {{ $corte ? 'bg-red-600 hover:bg-red-700 text-white border-red-700' : 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300' }}">
+                                                {{ $corte ? '🚨 Aviso de corte' : '⚠️ Notificar' }}
+                                                <span class="text-[10px] font-extrabold opacity-80">WhatsApp</span>
+                                            </a>
                                         @else
-                                            <span class="px-3 py-1.5 bg-amber-100 text-amber-800 rounded-lg text-xs font-black border border-amber-300 inline-block shadow-sm">
-                                                ⚠️ Notificar
+                                            <span class="inline-block px-3 py-1.5 rounded-lg text-xs font-black border bg-gray-100 text-gray-500 border-gray-200" title="Registra su celular en Socios para poder avisarle">
+                                                {{ $corte ? '🚨 Corte' : '⚠️ Notificar' }} · 📵 Sin celular
                                             </span>
                                         @endif
                                     </td>

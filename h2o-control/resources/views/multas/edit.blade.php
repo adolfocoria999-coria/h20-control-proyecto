@@ -1,5 +1,3 @@
-<script src="https://cdn.tailwindcss.com"></script>
-
 <x-app-layout>
     <div class="py-12 bg-sky-200/70 min-h-screen">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,26 +37,18 @@
                     <div>
                         <label class="block text-sm font-bold text-blue-950 mb-2">Tipo de Infracción:</label>
                         <select name="tarifa_multa_id" id="tarifa_multa_id" onchange="actualizarMonto()" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-3 font-bold text-sm text-blue-950 focus:ring-2 focus:ring-blue-500" required>
-                            <option value="1" data-monto="30.00" {{ $multa->tarifa_multa_id == 1 ? 'selected' : '' }}>Inasistencia a Reunión / Asamblea</option>
-                            <option value="2" data-monto="50.00" {{ $multa->tarifa_multa_id == 2 ? 'selected' : '' }}>Inasistencia a Desfile Cívico</option>
-                            <option value="3" data-monto="80.00" {{ $multa->tarifa_multa_id == 3 ? 'selected' : '' }}>Inasistencia a Trabajo Comunal</option>
-
-                            @if(isset($tarifas) && count($tarifas) > 0)
-                                @foreach($tarifas as $t)
-                                    @if(!in_array($t->id, [1, 2, 3]))
-                                        <option value="{{ $t->id }}" data-monto="{{ $t->monto_predeterminado }}" {{ $multa->tarifa_multa_id == $t->id ? 'selected' : '' }}>
-                                            {{ $t->nombre }} - (Bs. {{ number_format($t->monto_predeterminado, 2) }})
-                                        </option>
-                                    @endif
-                                @endforeach
-                            @endif
+                            @foreach($tarifas as $t)
+                                <option value="{{ $t->id }}" data-monto="{{ $t->monto_predeterminado }}" {{ old('tarifa_multa_id', $multa->tarifa_multa_id) == $t->id ? 'selected' : '' }}>
+                                    {{ $t->nombre }} - (Bs. {{ number_format($t->monto_predeterminado, 2) }})
+                                </option>
+                            @endforeach
 
                             <option value="otro" data-monto="0" {{ is_null($multa->tarifa_multa_id) ? 'selected' : '' }}>📌 Otro (Detallar motivo obligatoriamente)</option>
                         </select>
                     </div>
 
                     <!-- Monto, Fecha y Estado -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-bold text-blue-950 mb-2">Monto (Bs.):</label>
                             <input type="number" step="0.01" min="0" name="monto" id="monto" value="{{ old('monto', $multa->monto) }}" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-3 font-extrabold text-sm text-emerald-600 focus:ring-2 focus:ring-blue-500" required>
@@ -66,15 +56,25 @@
 
                         <div>
                             <label class="block text-sm font-bold text-blue-950 mb-2">Fecha del Evento:</label>
-                            <input type="date" name="fecha_multa" value="{{ old('fecha_multa', \Carbon\Carbon::parse($multa->fecha_multa)->format('Y-m-d')) }}" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-3 font-bold text-sm text-blue-950 focus:ring-2 focus:ring-blue-500" required>
+                            <input type="date" name="fecha_multa" value="{{ old('fecha_multa', $multa->fecha_multa->format('Y-m-d')) }}" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-3 font-bold text-sm text-blue-950 focus:ring-2 focus:ring-blue-500" required>
                         </div>
 
                         <div>
                             <label class="block text-sm font-bold text-blue-950 mb-2">Estado:</label>
-                            <select name="estado" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-3 font-bold text-sm text-blue-950 focus:ring-2 focus:ring-blue-500" required>
+                            <select name="estado" id="estado" onchange="document.getElementById('campo-metodo').classList.toggle('hidden', this.value !== 'pagado')" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-3 font-bold text-sm text-blue-950 focus:ring-2 focus:ring-blue-500" required>
                                 <option value="pendiente" {{ $multa->estado === 'pendiente' ? 'selected' : '' }}>⏳ Pendiente</option>
                                 <option value="pagado" {{ $multa->estado === 'pagado' ? 'selected' : '' }}>✅ Pagado</option>
                                 <option value="condonado" {{ $multa->estado === 'condonado' ? 'selected' : '' }}>🔵 Condonado</option>
+                            </select>
+                        </div>
+                        <!-- Método de pago: obligatorio si la multa está pagada (arqueo) -->
+                        <div id="campo-metodo" class="{{ old('estado', $multa->estado) === 'pagado' ? '' : 'hidden' }}">
+                            <label class="block text-sm font-bold text-blue-950 mb-2">Método de Pago:</label>
+                            <select name="metodo_pago" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-3 font-bold text-sm text-blue-950 focus:ring-2 focus:ring-blue-500">
+                                <option value="">-- Seleccione --</option>
+                                @foreach(\App\Enums\MetodoPago::cases() as $metodo)
+                                    <option value="{{ $metodo->value }}" {{ old('metodo_pago', $multa->metodo_pago?->value) === $metodo->value ? 'selected' : '' }}>{{ $metodo->icono() }} {{ $metodo->etiqueta() }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -103,7 +103,7 @@
             const txtMotivo = document.getElementById('motivo');
             const txtTipoTexto = document.getElementById('tipo_multa_texto');
 
-            txtTipoTexto.value = selectedOption.text.split(' - (Bs.')[0].trim();
+            txtTipoTexto.value = select.value === 'otro' ? '' : selectedOption.text.split(' - (Bs.')[0].trim();
 
             if (monto !== null && select.value !== 'otro') {
                 document.getElementById('monto').value = monto;

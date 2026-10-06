@@ -2,23 +2,69 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MetodoPago;
+use App\Http\Requests\LecturaRequest;
+use App\Models\Ajuste;
 use App\Models\Lectura;
 use App\Models\User;
+use App\Services\CsvExporter;
+use App\Services\Historial;
+use App\Services\QrPago;
+use App\Support\Meses;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class LecturaController extends Controller
 {
-    // 1. Muestra la lista general de lecturas
-    public function index()
+    public const POR_PAGINA = 20;
+
+    // 1. Lista de lecturas filtrada y paginada (la más reciente primero)
+    public function index(Request $request)
     {
-        $lecturas = Lectura::with('usuario')->orderBy('id', 'desc')->get();
-        return view('lecturas.index', compact('lecturas'));
+        $mes = Meses::numero($request->get('mes'));
+        $gestion = $request->integer('gestion') ?: null;
+
+        $lecturas = $this->consultaFiltrada($request)
+            ->with('usuario')
+            ->orderByDesc('gestion')->orderByDesc('mes')->orderByDesc('id')
+            ->paginate(self::POR_PAGINA)
+            ->withQueryString();
+
+        // Tarjetas de resumen: totales generales calculados en SQL, sin cargar todas las filas
+        $tarifa = Ajuste::tarifaM3();
+        $totalPendiente = round((float) Lectura::pendientes()->sum('consumo') * $tarifa, 2);
+        $totalCobrado = round((float) Lectura::where('estado', Lectura::PAGADO)->sum('consumo') * $tarifa, 2);
+        $cantPendientes = Lectura::pendientes()->count();
+
+        $gestiones = Lectura::query()->distinct()->orderByDesc('gestion')->pluck('gestion');
+
+        return view('lecturas.index', compact('lecturas', 'totalPendiente', 'totalCobrado', 'cantPendientes', 'gestiones', 'mes', 'gestion'));
+    }
+
+    /**
+     * Filtros de la lista: socio (nombre o C.I.), mes, gestión y estado.
+     */
+    private function consultaFiltrada(Request $request): Builder
+    {
+        $mes = Meses::numero($request->get('mes'));
+        $gestion = $request->integer('gestion') ?: null;
+        $buscar = trim((string) $request->get('socio'));
+
+        return Lectura::query()
+            ->when($buscar !== '', fn ($q) => $q->whereHas('usuario', fn ($u) => $u->withTrashed()
+                ->where(fn ($w) => $w->where('name', 'like', "%{$buscar}%")->orWhere('ci', 'like', "%{$buscar}%"))))
+            ->when($mes, fn ($q) => $q->where('mes', $mes))
+            ->when($gestion, fn ($q) => $q->where('gestion', $gestion))
+            ->when(in_array($request->get('estado'), [Lectura::PENDIENTE, Lectura::PAGADO], true),
+                fn ($q) => $q->where('estado', $request->get('estado')));
     }
 
     // 2. Formulario para registrar una lectura
     public function create()
     {
-        $socios = User::all(); 
+        $socios = User::all();
+
         return view('lecturas.create', compact('socios'));
     }
 
@@ -28,83 +74,43 @@ class LecturaController extends Controller
         $ignoreId = $request->query('ignore_id');
 
         $ultimaLectura = Lectura::where('user_id', $usuario_id)
-            ->when($ignoreId, function ($query) use ($ignoreId) {
-                return $query->where('id', '!=', $ignoreId);
-            })
+            ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
             ->orderBy('id', 'desc')
             ->first();
 
         return response()->json([
-            'tiene_lectura'  => (bool)$ultimaLectura,
-            'lectura_actual' => $ultimaLectura ? $ultimaLectura->lectura_actual : 0
+            'tiene_lectura' => (bool) $ultimaLectura,
+            'lectura_actual' => $ultimaLectura ? $ultimaLectura->lectura_actual : 0,
         ]);
     }
 
-    // 3. Guarda la nueva lectura
-    public function store(Request $request)
+    // 3. Guarda la nueva lectura (el consumo lo calcula el modelo)
+    public function store(LecturaRequest $request)
     {
-        $request->validate([
-            'user_id'          => 'required|exists:users,id',
-            'mes'               => 'required|string',
-            'gestion'           => 'required|integer',
-            'lectura_anterior'  => 'required|numeric|min:0',
-            'lectura_actual'    => 'required|numeric|gte:lectura_anterior',
-        ]);
-
-        $consumo = $request->lectura_actual - $request->lectura_anterior;
-
-        Lectura::create([
-            'user_id'          => $request->user_id,
-            'mes'               => $request->mes,
-            'gestion'           => $request->gestion,
-            'lectura_anterior'  => $request->lectura_anterior,
-            'lectura_actual'    => $request->lectura_actual,
-            'consumo'           => $consumo,
-        ]);
+        Lectura::create($request->validated());
 
         return redirect()->route('lecturas.index')->with('success', 'Lectura registrada ✓');
     }
 
-    public function show(string $id) { }
-
     // 4. Formulario para editar
-    public function edit(string $id)
+    public function edit(Lectura $lectura)
     {
-        $lectura = Lectura::findOrFail($id);
         $socios = User::all();
+
         return view('lecturas.edit', compact('lectura', 'socios'));
     }
 
     // 5. Actualiza el registro
-    public function update(Request $request, string $id)
+    public function update(LecturaRequest $request, Lectura $lectura)
     {
-        $request->validate([
-            'user_id'          => 'required|exists:users,id',
-            'mes'               => 'required|string',
-            'gestion'           => 'required|integer',
-            'lectura_anterior'  => 'required|numeric|min:0',
-            'lectura_actual'    => 'required|numeric|gte:lectura_anterior',
-        ]);
-
-        $lectura = Lectura::findOrFail($id);
-        $consumo = $request->lectura_actual - $request->lectura_anterior;
-
-        $lectura->update([
-            'user_id'          => $request->user_id,
-            'mes'               => $request->mes,
-            'gestion'           => $request->gestion,
-            'lectura_anterior'  => $request->lectura_anterior,
-            'lectura_actual'    => $request->lectura_actual,
-            'consumo'           => $consumo,
-        ]);
+        $lectura->update($request->validated());
 
         return redirect()->route('lecturas.index')->with('success', 'Lectura actualizada ✓');
     }
 
     // 6. Eliminar registro
-    public function destroy(string $id)
+    public function destroy(Lectura $lectura)
     {
-        $lectura = Lectura::findOrFail($id);
         $lectura->delete();
 
         return redirect()->route('lecturas.index')->with('success', 'La lectura fue eliminada ✓');
@@ -114,87 +120,55 @@ class LecturaController extends Controller
     public function miConsumo()
     {
         $misLecturas = Lectura::where('user_id', auth()->id())
-                              ->orderBy('id', 'desc')
-                              ->get();
+            ->orderBy('id', 'desc')
+            ->get();
 
-        return view('socio.consumo', compact('misLecturas'));
+        $qr = QrPago::actual();
+
+        return view('socio.consumo', compact('misLecturas', 'qr'));
     }
 
     // Cambiar estado a pagado
-    public function pagar(Lectura $lectura)
+    // Registra el cobro indicando cómo pagó el socio (QR o efectivo)
+    public function pagar(Request $request, Lectura $lectura)
     {
-        $lectura->update(['estado' => 'pagado']);
-
-        return redirect()->back()->with('success', '¡Pago confirmado! La deuda ha sido saldada con éxito.');
-    }
-
-    // 7. Subida de código QR (Superadmin)
-    public function actualizarQr(Request $request)
-    {
-        if (auth()->user()->rol_id != 1) {
-            abort(403, 'No tienes permisos para realizar esta acción.');
+        if ($lectura->estado === Lectura::PAGADO) {
+            return back()->with('error', 'Esta lectura ya está pagada.');
         }
 
-        $request->validate([
-            'qr_code' => 'required|image|mimes:png,jpg,jpeg|max:2048',
+        $datos = $request->validate([
+            'metodo_pago' => ['required', Rule::enum(MetodoPago::class)],
+        ], [
+            'metodo_pago.required' => 'Elige si el pago fue por QR o en efectivo.',
         ]);
 
-        if ($request->hasFile('qr_code')) {
-            $request->file('qr_code')->storeAs('public', 'qr_oficial.png');
-        }
+        $lectura->update(['estado' => Lectura::PAGADO, 'metodo_pago' => $datos['metodo_pago']]);
 
-        return back()->with('success', 'Código QR actualizado correctamente.');
+        return back()->with('success', '¡Pago confirmado ('.MetodoPago::from($datos['metodo_pago'])->etiqueta().')! La deuda ha sido saldada con éxito.');
     }
 
-    // 8. Exportar lecturas a Excel (CSV limpio)
-    public function exportar()
+    // 8. Exportar lecturas a Excel (CSV)
+    // Exporta lo mismo que muestra la lista (respeta los filtros)
+    public function exportar(Request $request)
     {
-        $fileName = 'lecturas_agua_' . date('Y-m-d_H-i') . '.csv';
+        $filas = $this->consultaFiltrada($request)->with('usuario')->lazyByIdDesc(500)->map(fn (Lectura $lectura) => [
+            $lectura->id,
+            $lectura->usuario->name ?? 'Desconocido',
+            $lectura->mes_nombre,
+            $lectura->gestion,
+            $lectura->lectura_anterior,
+            $lectura->lectura_actual,
+            $lectura->consumo,
+            CsvExporter::dinero($lectura->monto),
+            ucfirst($lectura->estado ?? Lectura::PENDIENTE),
+        ]);
 
-        $headers = [
-            "Content-Type"        => "text/csv; charset=UTF-8",
-            "Content-Disposition" => "attachment; filename=\"$fileName\"",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
-        ];
+        Historial::registrar('exportacion', 'lecturas', 'Exportó las lecturas de agua a Excel');
 
-        return response()->stream(function () {
-            while (ob_get_level()) {
-                ob_end_clean();
-            }
-
-            $file = fopen('php://output', 'w');
-
-            // Marca BOM UTF-8
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            // Indicador de separador para Excel
-            fwrite($file, "sep=;\n");
-
-            // Encabezados de columna
-            fputcsv($file, ['ID', 'Socio', 'Mes', 'Gestión', 'Lectura Anterior (m³)', 'Lectura Actual (m³)', 'Consumo (m³)', 'Monto (Bs.)', 'Estado'], ';');
-
-            Lectura::with('usuario')->orderBy('id', 'desc')->chunk(200, function ($lecturas) use ($file) {
-                foreach ($lecturas as $lectura) {
-                    $consumo = (float)$lectura->lectura_actual - (float)$lectura->lectura_anterior;
-                    $monto = $consumo * 2;
-
-                    fputcsv($file, [
-                        $lectura->id,
-                        $lectura->usuario->name ?? 'Desconocido',
-                        $lectura->mes,
-                        $lectura->gestion,
-                        $lectura->lectura_anterior,
-                        $lectura->lectura_actual,
-                        $consumo,
-                        number_format($monto, 2, ',', ''),
-                        ucfirst($lectura->estado ?? 'pendiente')
-                    ], ';');
-                }
-            });
-
-            fclose($file);
-        }, 200, $headers);
+        return CsvExporter::descargar(
+            'lecturas_agua_'.date('Y-m-d_H-i').'.csv',
+            ['ID', 'Socio', 'Mes', 'Gestión', 'Lectura Anterior (m³)', 'Lectura Actual (m³)', 'Consumo (m³)', 'Monto (Bs.)', 'Estado'],
+            $filas
+        );
     }
 }

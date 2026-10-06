@@ -1,5 +1,3 @@
-<script src="https://cdn.tailwindcss.com"></script>
-
 <x-app-layout>
     <div class="py-10 bg-sky-200/70 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -13,9 +11,7 @@
 
                 <div class="flex flex-wrap gap-2">
                     <!-- Botón Exportar a Excel/CSV -->
-                    <a href="{{ route('multas.exportar', request()->query()) }}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-4 py-3 rounded-xl shadow-lg transition-all text-sm flex items-center gap-2">
-                        .Excel
-                    </a>
+                    <x-boton-excel :href="route('multas.exportar', request()->query())" />
 
                     @if($esGestion)
                         <a href="{{ route('multas.create') }}" class="bg-blue-700 hover:bg-blue-800 text-white font-extrabold px-5 py-3 rounded-xl shadow-lg transition-all text-sm flex items-center gap-2">
@@ -24,6 +20,8 @@
                     @endif
                 </div>
             </div>
+
+            <x-mensajes-sesion class="mb-6" />
 
             <!-- Tarjetas de Resumen -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -103,7 +101,7 @@
             <!-- Tabla de Multas -->
             <div class="bg-white rounded-2xl border border-sky-100 shadow-xl overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="tabla-responsiva w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-sky-900 text-white text-xs uppercase tracking-wider font-extrabold">
                                 <th class="py-4 px-6">Socio / Afiliado</th>
@@ -120,13 +118,13 @@
                             @forelse($multas as $m)
                                 <tr class="hover:bg-sky-50 transition-all">
                                     <!-- Socio -->
-                                    <td class="py-4 px-6">
+                                    <td data-label="Socio / Afiliado" class="py-4 px-6">
                                         <p class="font-bold text-blue-950">{{ $m->socio->name ?? 'Usuario Desconocido' }}</p>
                                         <p class="text-xs text-gray-500">{{ $m->socio->email ?? 'Sin Email' }}</p>
                                     </td>
 
                                     <!-- Infracción -->
-                                    <td class="py-4 px-6">
+                                    <td data-label="Tipo Infracción / Motivo" class="py-4 px-6">
                                         <p class="font-bold text-sky-900">
                                             @if($m->tipo_multa && $m->tipo_multa !== 'Multa')
                                                 {{ $m->tipo_multa }}
@@ -142,20 +140,27 @@
                                     </td>
 
                                     <!-- Monto -->
-                                    <td class="py-4 px-6 text-center font-extrabold text-emerald-700">
+                                    <td data-label="Monto (Bs.)" class="py-4 px-6 text-center font-extrabold text-emerald-700">
                                         Bs. {{ number_format($m->monto, 2) }}
                                     </td>
 
                                     <!-- Fecha -->
-                                    <td class="py-4 px-6 text-center text-xs text-gray-600">
-                                        {{ \Carbon\Carbon::parse($m->fecha_multa)->format('d/m/Y') }}
+                                    <td data-label="Fecha Multa" class="py-4 px-6 text-center text-xs text-gray-600">
+                                        {{ $m->fecha_multa->format('d/m/Y') }}
                                     </td>
 
                                     <!-- Estado -->
-                                    <td class="py-4 px-6 text-center">
+                                    <td data-label="Estado" class="py-4 px-6 text-center">
                                         @if($m->estado === 'pagado')
                                             <span class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-black border border-emerald-200">
                                                 ✅ Pagado
+                                            </span>
+                                            @if($m->metodo_pago)
+                                                <div class="mt-1 text-xs font-bold text-sky-800">{{ $m->metodo_pago->icono() }} {{ $m->metodo_pago->etiqueta() }}</div>
+                                            @endif
+                                        @elseif($m->estado === 'condonado')
+                                            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-black border border-purple-200">
+                                                🔵 Condonado
                                             </span>
                                         @else
                                             <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-black border border-amber-200">
@@ -166,16 +171,15 @@
 
                                     <!-- Acciones -->
                                     @if($esGestion)
-                                        <td class="py-4 px-6 text-center">
+                                        <td data-label="Acciones" class="py-4 px-6 text-center">
                                             <div class="flex justify-center items-center gap-2">
                                                 @if($m->estado === 'pendiente')
-                                                    <!-- Botón Pagar -->
-                                                    <form action="{{ route('multas.pagar', $m->id) }}" method="POST" class="inline">
-                                                        @csrf
-                                                        <button type="submit" onclick="return confirm('¿Confirmar pago de Bs. {{ $m->monto }}?')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1 shadow" title="Cobrar Multa">
-                                                            💵 Pagar
-                                                        </button>
-                                                    </form>
+                                                    <!-- Botón Pagar: abre el modal para elegir QR o efectivo -->
+                                                    <x-boton-pagar :accion="route('multas.pagar', $m)"
+                                                                   :concepto="'Multa – '.$m->tipo_multa.' – '.($m->socio->name ?? 'Socio')"
+                                                                   :monto="'Bs. '.number_format((float) $m->monto, 2, ',', '.')">
+                                                        Pagar
+                                                    </x-boton-pagar>
                                                 @endif
 
                                                 <!-- Botón Eliminar -->
@@ -211,4 +215,5 @@
 
         </div>
     </div>
+    <x-modal-pago />
 </x-app-layout>

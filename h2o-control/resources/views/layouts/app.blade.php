@@ -17,6 +17,9 @@
             
             @include('layouts.navigation')
 
+            {{-- Aviso de QR de pago faltante o por vencer (solo administradores) --}}
+            <x-alerta-qr />
+
             @isset($header)
                 <header class="bg-white/80 backdrop-blur-md border-b border-blue-100 shadow-sm">
                     <div class="max-w-7xl mx-auto py-5 px-4 sm:px-6 lg:px-8">

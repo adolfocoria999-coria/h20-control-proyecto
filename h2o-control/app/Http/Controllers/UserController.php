@@ -2,188 +2,114 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UsuarioRequest;
+use App\Models\Rol;
 use App\Models\User;
-use App\Models\Rol; 
+use App\Services\CsvExporter;
+use App\Services\Historial;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    /**
-     * Helper privado para verificar si el usuario tiene permisos administrativos.
-     */
-    private function esAdministrador(): bool
+    public const POR_PAGINA = 20;
+
+    // Lista filtrada y paginada en el servidor (por nombre, CI o teléfono)
+    public function index(Request $request)
     {
-        $user = auth()->user();
-        return $user && (
-            $user->rol_id == 1 || 
-            $user->rol_id == 3 || 
-            in_array($user->email, ['adolfo@example.com', 'jonh@example.com'])
-        );
+        $usuarios = $this->consultaFiltrada($request)
+            ->with('rol')
+            ->orderBy('name')
+            ->paginate(self::POR_PAGINA)
+            ->withQueryString();
+
+        return view('usuarios.index', compact('usuarios'));
     }
 
-    public function index()
+    /**
+     * Filtros de la lista: nombre o email, C.I. y teléfono.
+     */
+    private function consultaFiltrada(Request $request): Builder
     {
-        // 🔒 BLINDAJE DE SEGURIDAD
-        if (!$this->esAdministrador()) {
-            return redirect()->route('socio.consumo')->with('error', 'Acceso denegado: No tiene permisos administrativos.');
-        }
+        $filtros = array_map(fn ($v) => trim((string) $v), $request->only(['nombre', 'ci', 'telefono']));
 
-        $usuarios = User::with('rol')->get(); 
-        return view('usuarios.index', compact('usuarios'));
+        return User::query()
+            ->when($filtros['nombre'] ?? null, fn ($q, $v) => $q->where(fn ($w) => $w
+                ->where('name', 'like', "%{$v}%")->orWhere('email', 'like', "%{$v}%")))
+            ->when($filtros['ci'] ?? null, fn ($q, $v) => $q->where('ci', 'like', "%{$v}%"))
+            ->when($filtros['telefono'] ?? null, fn ($q, $v) => $q->where('telefono', 'like', "%{$v}%"));
     }
 
     public function create()
     {
-        // 🔒 BLINDAJE DE SEGURIDAD CONTRA ACCESO POR URL DIRECTA
-        if (!$this->esAdministrador()) {
-            return redirect()->route('socio.consumo')->with('error', 'Acceso denegado.');
-        }
-
         $roles = Rol::all();
+
         return view('usuarios.create', compact('roles'));
     }
-    
-    public function store(Request $request)
+
+    // La contraseña se encripta sola gracias al cast 'hashed' del modelo
+    public function store(UsuarioRequest $request)
     {
-        // 🔒 BLINDAJE DE SEGURIDAD EN EL ENVÍO DE FORMULARIOS
-        if (!$this->esAdministrador()) {
-            return redirect()->route('socio.consumo')->with('error', 'Acceso denegado.');
-        }
-
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
-            'rol_id'   => 'required|integer',
-            'ci'       => 'nullable|string|max:20',
-            'telefono' => 'nullable|string|max:20',
-        ]);
-
-        User::create([
-            'name'     => $request->name,
-            'ci'       => $request->ci,
-            'telefono' => $request->telefono,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password), 
-            'rol_id'   => $request->rol_id,
-        ]);
+        User::create($request->validated());
 
         return redirect()->route('usuarios.index')->with('success', 'Socio registrado con éxito.');
     }
 
-    public function show(string $id) { }
-
-    public function edit(string $id)
+    public function edit(User $usuario)
     {
-        if (!$this->esAdministrador()) {
-            return redirect()->route('socio.consumo')->with('error', 'Acceso denegado.');
-        }
+        $roles = Rol::all();
 
-        $usuario = User::findOrFail($id); 
-        $roles = Rol::all(); 
         return view('usuarios.edit', compact('usuario', 'roles'));
     }
 
-    public function update(Request $request, string $id)
+    public function update(UsuarioRequest $request, User $usuario)
     {
-        if (!$this->esAdministrador()) {
-            return redirect()->route('socio.consumo')->with('error', 'Acceso denegado.');
+        if ($usuario->is($request->user()) && (int) $request->rol_id !== (int) $usuario->rol_id) {
+            return back()->withInput()->with('error', 'No puedes cambiar tu propio rol.');
         }
 
-        $usuario = User::findOrFail($id);
+        $datos = $request->validated();
 
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users,email,' . $id,
-            'rol_id'   => 'required|integer',
-            'ci'       => 'nullable|string|max:20',
-            'telefono' => 'nullable|string|max:20',
-        ]);
-
-        $usuario->name = $request->name;
-        $usuario->ci = $request->ci;
-        $usuario->telefono = $request->telefono;
-        $usuario->email = $request->email;
-        $usuario->rol_id = $request->rol_id;
-
-        if ($request->filled('password')) {
-            $usuario->password = Hash::make($request->password);
+        // Contraseña vacía = conservar la actual
+        if (blank($datos['password'] ?? null)) {
+            unset($datos['password']);
         }
 
-        $usuario->save();
+        $usuario->update($datos);
 
         return redirect()->route('usuarios.index')->with('success', 'Socio actualizado con éxito.');
     }
 
-    public function destroy(string $id)
+    public function destroy(User $usuario)
     {
-        if (!$this->esAdministrador()) {
-            return redirect()->route('socio.consumo')->with('error', 'Acceso denegado.');
-        }
-
-        $usuario = User::findOrFail($id);
-        
-        if ($usuario->id === auth()->id()) {
+        if ($usuario->is(auth()->user())) {
             return redirect()->route('usuarios.index')->with('error', 'No puedes eliminar tu propio usuario.');
         }
 
-        $usuario->delete(); 
+        $usuario->delete();
 
-        return redirect()->route('usuarios.index')->with('success', 'Socio eliminado correctamente.');
+        return redirect()->route('usuarios.index')->with('success', 'Socio dado de baja. Su historial de lecturas y multas se conserva.');
     }
 
-    // 4. EXPORTA LA LISTA COMPLETA DE SOCIOS A CSV / EXCEL
-    public function exportar()
+    // Exporta la lista completa de socios a CSV / Excel
+    // Exporta lo mismo que muestra la lista (respeta los filtros)
+    public function exportar(Request $request)
     {
-        if (!$this->esAdministrador()) {
-            return redirect()->route('socio.consumo')->with('error', 'Acceso denegado: No tiene permisos para exportar datos.');
-        }
+        $filas = $this->consultaFiltrada($request)->with('rol')->orderBy('name')->lazy()->map(fn (User $socio) => [
+            $socio->id,
+            $socio->name,
+            $socio->email,
+            $socio->ci ?? 'N/A',
+            $socio->telefono ?? 'N/A',
+            $socio->rol->nombre ?? 'Sin Rol',
+        ]);
 
-        // Limpia cualquier salida o búfer residual para prevenir descargas corruptas
-        if (ob_get_level()) {
-            ob_end_clean();
-        }
+        Historial::registrar('exportacion', 'usuarios', 'Exportó la lista de socios a Excel');
 
-        $fileName = 'lista_socios_' . date('Y-m-d_H-i') . '.csv';
-
-        $headers = [
-            "Content-Type"        => "text/csv; charset=UTF-8",
-            "Content-Disposition" => "attachment; filename=\"$fileName\"",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
-        ];
-
-        return response()->stream(function () {
-            $file = fopen('php://output', 'w');
-            
-            // BOM UTF-8 para garantizar codificación correcta de acentos y ñ
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            // Indicamos explícitamente a Excel que el delimitador de columnas es ';'
-            fwrite($file, "sep=;\n");
-
-            // Encabezados con delimitador ';'
-            fputcsv($file, ['ID', 'Nombre Completo', 'Email', 'Carnet de Identidad', 'Telefono', 'Rol'], ';');
-
-            User::with('rol')->chunk(200, function ($usuarios) use ($file) {
-                foreach ($usuarios as $socio) {
-                    $nombreRol = $socio->rol->nombre ?? ($socio->rol->nombre_rol ?? 'Sin Rol');
-
-                    // Filas con delimitador ';'
-                    fputcsv($file, [
-                        $socio->id,
-                        $socio->name,
-                        $socio->email,
-                        $socio->ci ?? 'N/A',
-                        $socio->telefono ?? 'N/A',
-                        $nombreRol
-                    ], ';');
-                }
-            });
-
-            fclose($file);
-        }, 200, $headers);
+        return CsvExporter::descargar(
+            'lista_socios_'.date('Y-m-d_H-i').'.csv',
+            ['ID', 'Nombre Completo', 'Email', 'Carnet de Identidad', 'Telefono', 'Rol'],
+            $filas
+        );
     }
 }

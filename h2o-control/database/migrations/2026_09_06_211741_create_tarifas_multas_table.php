@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('tarifas_multas', function (Blueprint $table) {
             $table->id();
+            $table->string('nombre');
+            $table->decimal('monto_predeterminado', 10, 2)->default(0);
+            $table->text('descripcion')->nullable();
             $table->timestamps();
         });
     }

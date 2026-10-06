@@ -28,20 +28,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        $user = Auth::user();
-
-        // 1. SUPERADMIN (rol_id 1) -> Va a la gestión de Socios
-        if ($user->rol_id == 1) {
-            return redirect()->intended(route('usuarios.index'));
-        }
-
-        // 2. ADMINISTRADOR / HACIENDA (rol_id 2) -> Va directo a Lecturas de Agua
-        if ($user->rol_id == 2) {
-            return redirect()->intended(route('lecturas.index'));
-        }
-
-        // 3. SOCIO COMÚN (rol_id 3) -> Va a su pantalla de consumo
-        return redirect()->intended(route('socio.consumo'));
+        // Cada rol va a su pantalla de inicio (superadmin: socios, admin: lecturas, socio: su consumo)
+        return redirect()->intended(Auth::user()->rutaInicio());
     }
 
     /**

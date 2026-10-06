@@ -1,5 +1,3 @@
-<script src="https://cdn.tailwindcss.com"></script>
-
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-extrabold text-xl text-blue-950 leading-tight">
@@ -18,10 +16,13 @@
             @endif
 
             <div class="bg-white overflow-hidden shadow-xl shadow-sky-950/10 rounded-2xl p-6 border border-sky-100">
-                <h3 class="text-lg font-black text-blue-950 mb-4 tracking-tight">Mis Lecturas de Agua de la OTB</h3>
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h3 class="text-lg font-black text-blue-950 tracking-tight">Mis Lecturas de Agua de la OTB</h3>
+                    <a href="{{ route('socio.pagos') }}" class="text-sm font-extrabold text-blue-700 hover:underline">🧾 Ver mi historial de pagos →</a>
+                </div>
 
                 <div class="overflow-x-auto border border-sky-100 rounded-xl shadow-inner">
-                    <table class="min-w-full divide-y divide-sky-100">
+                    <table class="tabla-responsiva min-w-full divide-y divide-sky-100">
                         <thead class="bg-blue-900 text-white text-xs font-bold uppercase tracking-wider">
                             <tr>
                                 <th class="px-6 py-3 text-left">Mes / Gestión</th>
@@ -35,24 +36,24 @@
                         <tbody class="bg-white divide-y divide-sky-100/70 text-sm">
                             @forelse($misLecturas as $lectura)
                             <tr class="hover:bg-sky-50 transition-colors duration-150">
-                                <td class="px-6 py-4 whitespace-nowrap text-blue-900 font-extrabold">
-                                    {{ $lectura->mes }} / {{ $lectura->gestion }}
+                                <td data-label="Mes / Gestión" class="px-6 py-4 whitespace-nowrap text-blue-900 font-extrabold">
+                                    {{ $lectura->periodo }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-sky-700 font-semibold">
+                                <td data-label="Lectura Anterior" class="px-6 py-4 whitespace-nowrap text-center text-sky-700 font-semibold">
                                     {{ $lectura->lectura_anterior }} m³
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-blue-950 font-black">
+                                <td data-label="Lectura Actual" class="px-6 py-4 whitespace-nowrap text-center text-blue-950 font-black">
                                     {{ $lectura->lectura_actual }} m³
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <td data-label="Tu Consumo" class="px-6 py-4 whitespace-nowrap text-center">
                                     <span class="px-2.5 py-1 text-xs font-extrabold rounded-lg bg-sky-100 text-blue-950 border border-sky-200">
                                         {{ $lectura->consumo }} m³
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-emerald-600 font-extrabold">
-                                    Bs. {{ $lectura->consumo * 2 }}
+                                <td data-label="Total a Pagar" class="px-6 py-4 whitespace-nowrap text-emerald-600 font-extrabold">
+                                    Bs. {{ number_format($lectura->monto, 2) }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <td data-label="Estado" class="px-6 py-4 whitespace-nowrap text-center">
                                     @if($lectura->estado == 'pendiente')
                                         <span class="px-3 py-1 inline-flex text-xs font-extrabold rounded-full bg-red-100 text-red-800 border border-red-200 items-center animate-pulse">
                                             <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>
@@ -63,6 +64,9 @@
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
                                             ✅ Pagado
                                         </span>
+                                        @if($lectura->metodo_pago)
+                                            <div class="mt-1 text-xs font-bold text-sky-800">{{ $lectura->metodo_pago->icono() }} {{ $lectura->metodo_pago->etiqueta() }}</div>
+                                        @endif
                                     @endif
                                 </td>
                             </tr>
@@ -91,10 +95,18 @@
                     
                     <!-- VISTA DE IMAGEN QR UNIFICADA (SUBIDA DESDE FINANZAS POR SUPERADMIN) -->
                     <div class="bg-sky-50 p-4 rounded-2xl shadow-inner border border-sky-100">
-                        @if(Storage::disk('public')->exists('qr_oficial.png'))
-                            <img src="{{ asset('storage/qr_oficial.png') }}?v={{ time() }}" alt="QR OTB" class="w-56 h-56 mx-auto rounded-xl shadow-md object-contain bg-white">
+                        @if($qr->disponible())
+                            <img src="{{ $qr->url() }}" alt="QR OTB" class="w-56 h-56 mx-auto rounded-xl shadow-md object-contain bg-white">
+                            @if($qr->venceEl)
+                                <p class="mt-3 text-xs font-extrabold text-blue-900">Válido hasta el {{ $qr->venceEl->format('d/m/Y') }}</p>
+                            @endif
                         @else
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=CuentaOTB_Bolivia_Simulacion" alt="QR OTB" class="w-56 h-56 mx-auto rounded-xl shadow-md">
+                            {{-- Nunca mostrar un QR vencido o de prueba: el pago podría perderse --}}
+                            <div class="w-56 h-56 mx-auto rounded-xl bg-white border-2 border-dashed border-red-300 flex flex-col items-center justify-center p-4">
+                                <span class="text-3xl">⛔</span>
+                                <p class="mt-2 text-sm font-black text-red-700">QR de pago no disponible</p>
+                                <p class="mt-1 text-xs font-bold text-gray-600">Comunícate con el Secretario de Finanzas para pagar.</p>
+                            </div>
                         @endif
                     </div>
 
@@ -117,7 +129,7 @@
                             </li>
                             <li>
                                 Comparte el comprobante de pago por WhatsApp al Secretario de Finanzas 
-                                (<a href="https://wa.me/59163883052" target="_blank" class="font-extrabold text-blue-700 underline hover:text-blue-900">63883052</a>) 
+                                (<a href="{{ \App\Support\WhatsApp::enlace(config('otb.telefono_finanzas')) }}" target="_blank" rel="noopener" class="font-extrabold text-blue-700 underline hover:text-blue-900">{{ config('otb.telefono_finanzas') }}</a>) 
                                 indicando tu nombre completo, carnet <strong class="text-red-600 font-extrabold uppercase"> detallando exactamente qué meses estás cancelando</strong> para dar de baja tu deuda en el sistema.
                             </li>
                         </ol>
