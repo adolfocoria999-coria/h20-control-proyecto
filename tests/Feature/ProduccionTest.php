@@ -62,4 +62,23 @@ class ProduccionTest extends TestCase
         $this->assertSame(3, TarifaMulta::count());
         $this->assertSame(1, User::count());
     }
+
+    public function test_migrate_crea_roles_y_tarifas_sin_ejecutar_seeders(): void
+    {
+        // RefreshDatabase ya ejecutó todas las migraciones
+        $this->assertSame(3, DB::table('rols')->count());
+        $this->assertSame(3, TarifaMulta::count());
+        $this->assertSame(0, User::count()); // sin ADMIN_EMAIL no crea superadmin
+    }
+
+    public function test_la_migracion_crea_el_superadmin_si_esta_configurado(): void
+    {
+        config(['otb.admin' => ['nombre' => 'Presidente', 'email' => 'presidente@otb.com', 'password' => 'una-clave-larga-y-segura']]);
+
+        $migracion = require database_path('migrations/2026_10_07_000000_cargar_datos_iniciales.php');
+        $migracion->up();
+        $migracion->up();
+
+        $this->assertTrue(User::sole()->esSuperAdmin());
+    }
 }

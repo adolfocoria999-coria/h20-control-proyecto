@@ -32,8 +32,8 @@ class AppServiceProvider extends ServiceProvider
         // Sesiones (inicio, cierre, intentos fallidos) al historial de actividades
         Event::subscribe(RegistrarEventosDeSesion::class);
 
-        // En producción todas las URLs usan https
-        if ($this->app->environment('production')) {
+        // Fuera de la PC de desarrollo (hosting de pruebas o producción) todas las URLs usan https
+        if (! $this->app->environment('local', 'testing')) {
             URL::forceScheme('https');
         }
     }
