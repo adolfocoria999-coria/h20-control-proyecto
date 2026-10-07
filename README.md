@@ -36,7 +36,6 @@ Los permisos se controlan con el middleware `role` (`app/Http/Middleware/EnsureU
 ## Instalación
 
 ```bash
-cd h2o-control
 composer install
 npm install
 
@@ -80,7 +79,7 @@ El seeder crea al superadministrador:
 | Comando | Para qué |
 |---|---|
 | `npm run dev` | Recompila los estilos al guardar. Úsalo mientras editas vistas |
-| `npm run build` | Compila los estilos para publicar. **Obligatorio** si cambiaste clases de Tailwind |
+| `npm run build` | Compila los estilos para publicar. **Obligatorio** si cambiaste clases de Tailwind: `public/build` se sube al repositorio porque el hosting puede no tener Node |
 | `php artisan migrate` | Aplica migraciones nuevas. Ejecútalo después de cada actualización del código |
 | `php artisan test` | Ejecuta las pruebas (usan SQLite en memoria, no tocan tu base) |
 | `vendor/bin/pint` | Da formato al código PHP |
