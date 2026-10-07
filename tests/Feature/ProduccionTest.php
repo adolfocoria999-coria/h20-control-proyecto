@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Enums\RolUsuario;
+use App\Models\TarifaMulta;
 use App\Models\User;
 use Database\Seeders\RolSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException;
 use Tests\TestCase;
@@ -47,5 +49,17 @@ class ProduccionTest extends TestCase
         $this->get('/login', ['X-Forwarded-Proto' => 'https', 'X-Forwarded-Host' => 'h2o.ejemplo.app'])
             ->assertOk()
             ->assertSee('action="https://h2o.ejemplo.app/login"', false);
+    }
+
+    public function test_los_seeders_se_pueden_ejecutar_en_cada_despliegue(): void
+    {
+        config(['otb.admin' => ['nombre' => 'Presidente', 'email' => 'presidente@otb.com', 'password' => 'una-clave-larga-y-segura']]);
+
+        $this->seed();
+        $this->seed();
+
+        $this->assertSame(3, DB::table('rols')->count());
+        $this->assertSame(3, TarifaMulta::count());
+        $this->assertSame(1, User::count());
     }
 }
