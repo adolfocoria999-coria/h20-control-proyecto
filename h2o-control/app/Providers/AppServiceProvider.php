@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Listeners\RegistrarEventosDeSesion;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,5 +31,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Sesiones (inicio, cierre, intentos fallidos) al historial de actividades
         Event::subscribe(RegistrarEventosDeSesion::class);
+
+        // En producción todas las URLs usan https
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }

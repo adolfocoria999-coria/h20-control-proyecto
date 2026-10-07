@@ -14,4 +14,11 @@ return [
     // Meses de deuda de agua a partir de los cuales corresponde el corte
     'meses_para_corte' => (int) env('OTB_MESES_PARA_CORTE', 3),
 
+    // Superadministrador inicial que crea `php artisan db:seed` (solo la primera vez)
+    'admin' => [
+        'nombre' => env('ADMIN_NOMBRE', 'Superadministrador'),
+        'email' => env('ADMIN_EMAIL'),
+        'password' => env('ADMIN_PASSWORD'),
+    ],
+
 ];

@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
         ]);
+
+        // En el hosting la app está detrás de un proxy que atiende el HTTPS:
+        // confiar en sus cabeceras para generar URLs https (estilos, enlaces, formularios)
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
