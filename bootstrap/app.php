@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\ExigirCambioDeClave;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // En el hosting la app está detrás de un proxy que atiende el HTTPS:
         // confiar en sus cabeceras para generar URLs https (estilos, enlaces, formularios)
         $middleware->trustProxies(at: '*');
+
+        // Contraseña temporal: obliga a cambiarla antes de usar el sistema
+        $middleware->appendToGroup('web', ExigirCambioDeClave::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

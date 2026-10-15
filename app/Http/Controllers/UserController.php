@@ -7,8 +7,10 @@ use App\Models\Rol;
 use App\Models\User;
 use App\Services\CsvExporter;
 use App\Services\Historial;
+use App\Support\WhatsApp;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -50,7 +52,10 @@ class UserController extends Controller
     // La contraseña se encripta sola gracias al cast 'hashed' del modelo
     public function store(UsuarioRequest $request)
     {
-        User::create($request->validated());
+        // La contraseña la eligió el superadmin: el socio debe cambiarla al ingresar
+        $socio = new User($request->validated());
+        $socio->debe_cambiar_clave = true;
+        $socio->save();
 
         return redirect()->route('usuarios.index')->with('success', 'Socio registrado con éxito.');
     }
@@ -75,9 +80,49 @@ class UserController extends Controller
             unset($datos['password']);
         }
 
-        $usuario->update($datos);
+        $usuario->fill($datos);
+        // Una contraseña puesta por el superadmin a otro usuario es temporal
+        if (isset($datos['password']) && ! $usuario->is($request->user())) {
+            $usuario->debe_cambiar_clave = true;
+        }
+        $usuario->save();
 
         return redirect()->route('usuarios.index')->with('success', 'Socio actualizado con éxito.');
+    }
+
+    /**
+     * Genera una contraseña temporal para quien la olvidó. Se muestra una sola vez
+     * al superadmin (con un enlace para enviarla por WhatsApp) y el socio debe
+     * cambiarla al ingresar. Cierra las sesiones abiertas de ese usuario.
+     */
+    public function restablecerClave(Request $request, User $usuario)
+    {
+        if ($usuario->is($request->user())) {
+            return back()->with('error', 'Para cambiar tu propia contraseña usa "Mi Perfil".');
+        }
+
+        $clave = 'H2O-'.random_int(1000, 9999).'-'.random_int(1000, 9999);
+
+        $usuario->password = $clave;
+        $usuario->debe_cambiar_clave = true;
+        $usuario->setRememberToken(null);
+        $usuario->saveQuietly();
+
+        if (config('session.driver') === 'database') {
+            DB::table(config('session.table', 'sessions'))->where('user_id', $usuario->id)->delete();
+        }
+
+        Historial::registrar('actualizado', 'usuarios', "Restableció la contraseña de {$usuario->name}", $usuario);
+
+        $mensaje = "Hola {$usuario->name}. Tu contraseña temporal de H2O Control (".config('otb.nombre')."): {$clave}\n"
+            ."Ingresa con tu correo {$usuario->email} en ".url('/login').' y elige una nueva contraseña.';
+
+        return redirect()->route('usuarios.index')->with('clave_temporal', [
+            'nombre' => $usuario->name,
+            'email' => $usuario->email,
+            'clave' => $clave,
+            'whatsapp' => WhatsApp::enlace($usuario->telefono, $mensaje),
+        ]);
     }
 
     public function destroy(User $usuario)

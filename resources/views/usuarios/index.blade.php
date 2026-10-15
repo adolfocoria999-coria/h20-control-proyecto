@@ -25,6 +25,28 @@
                 </div>
             </div>
 
+            <x-mensajes-sesion />
+
+            {{-- Contraseña temporal recién generada: se muestra una sola vez --}}
+            @if($nueva = session('clave_temporal'))
+                <div class="p-5 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl shadow-md space-y-2">
+                    <p class="font-extrabold text-amber-900">🔑 Contraseña temporal de {{ $nueva['nombre'] }}</p>
+                    <p class="text-sm font-bold text-amber-900">
+                        Correo: <span class="font-black">{{ $nueva['email'] }}</span> ·
+                        Contraseña: <span class="font-mono font-black text-lg tracking-wider select-all bg-white px-2 py-0.5 rounded border border-amber-300">{{ $nueva['clave'] }}</span>
+                    </p>
+                    <p class="text-xs font-bold text-amber-800">Anótala o envíasela ahora: no se vuelve a mostrar. Al ingresar, el sistema le pedirá elegir una nueva.</p>
+                    @if($nueva['whatsapp'])
+                        <a href="{{ $nueva['whatsapp'] }}" target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-extrabold text-sm shadow">
+                            📲 Enviar por WhatsApp
+                        </a>
+                    @else
+                        <p class="text-xs font-bold text-amber-800">Este socio no tiene un celular válido registrado: entrégale la contraseña en persona.</p>
+                    @endif
+                </div>
+            @endif
+
             <!-- FILTROS (se aplican en el servidor para poder paginar) -->
             <form method="GET" action="{{ route('usuarios.index') }}" class="mb-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -130,6 +152,16 @@
                                             Editar
                                         </a>
                                         
+                                        @unless($user->is(auth()->user()))
+                                            <form action="{{ route('usuarios.restablecer-clave', $user) }}" method="POST" class="m-0 p-0"
+                                                  onsubmit="return confirm('¿Generar una contraseña temporal para {{ $user->name }}? Su contraseña actual dejará de funcionar.')">
+                                                @csrf
+                                                <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-extrabold shadow-sm transition-all hover:scale-105" title="Restablecer contraseña">
+                                                    🔑 Clave
+                                                </button>
+                                            </form>
+                                        @endunless
+
                                         <form action="{{ route('usuarios.destroy', $user->id) }}" method="POST" class="m-0 p-0">
                                             @csrf
                                             @method('DELETE')

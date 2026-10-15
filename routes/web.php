@@ -33,6 +33,7 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     // Gestión de socios (la exportación va antes del resource)
     Route::get('/usuarios/exportar', [UserController::class, 'exportar'])->name('usuarios.exportar');
     Route::resource('usuarios', UserController::class)->except('show');
+    Route::post('/usuarios/{usuario}/restablecer-clave', [UserController::class, 'restablecerClave'])->name('usuarios.restablecer-clave');
 
     // Tarifa del agua por m³ (decisión de la directiva)
     Route::get('/tarifa-agua', [TarifaAguaController::class, 'index'])->name('tarifa-agua.index');

@@ -70,11 +70,9 @@
                         <label for="remember_me" class="ml-2 block text-sm text-gray-600 cursor-pointer">Recordarme</label>
                     </div>
 
-                    @if (Route::has('password.request'))
-                        <a href="{{ route('password.request') }}" class="text-sm font-semibold text-blue-600 hover:text-cyan-500 transition duration-150">
-                            ¿Olvidaste tu contraseña?
-                        </a>
-                    @endif
+                    <span class="text-xs font-semibold text-gray-500 text-right" title="La directiva te da una contraseña temporal">
+                        ¿Olvidaste tu contraseña? Pídela a la directiva.
+                    </span>
                 </div>
 
                 <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transform transition-all duration-300 hover:-translate-y-1 hover:shadow-cyan-500/50">

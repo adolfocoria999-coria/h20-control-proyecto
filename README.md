@@ -10,18 +10,23 @@ Hecho con **Laravel 12**, Blade, Tailwind CSS 3 (compilado con Vite) y Alpine.js
 
 | Rol | Puede |
 |---|---|
-| **Superadministrador** (presidente) | Todo, incluida la gestión de socios y la eliminación de balances |
+| **Superadministrador** (presidente) | Todo, incluida la gestión de socios, la tarifa del agua, restablecer contraseñas y la eliminación de balances |
 | **Administrador** (Secretario de Hacienda) | Lecturas, cobros, multas, tarifas, finanzas, QR de pago y reportes |
 | **Socio** | Ver su consumo y sus deudas, sus multas, las finanzas de la OTB y el QR de pago |
 
 Los permisos se controlan con el middleware `role` (`app/Http/Middleware/EnsureUserHasRole.php`) y el enum `App\Enums\RolUsuario`. No hay registro público: los socios los crea el superadministrador.
 
+**Contraseñas:** la que pone el superadministrador (al crear un socio o con el botón 🔑 *Clave* de la lista de socios) es temporal: el sistema obliga a cambiarla al ingresar. No hay recuperación por correo; quien la olvida la pide a la directiva, que puede enviarla por WhatsApp desde la misma pantalla.
+
 ## Módulos
 
-- **Lecturas**: una lectura por socio y mes. El consumo y el monto se calculan solos; la tarifa por m³ está en la tabla `ajustes` (`tarifa_m3`).
-- **Multas**: individuales o masivas, con tarifas configurables. Una multa cobrada se suma sola al balance del mes en Finanzas (columna "Multas cobradas").
-- **Finanzas**: un balance por mes, con comprobantes privados (solo se ven con sesión iniciada) y el **QR de pago** de la OTB, que tiene fecha de vencimiento y avisa 7 días antes.
-- **Reportes**: totales cobrados y pendientes por gestión y mes, y lista de socios morosos. Se exportan a Excel (CSV).
+- **Lecturas**: una lectura por socio y mes. La lectura anterior la completa el sistema con la del mes previo del socio (solo la primera se escribe a mano: lectura inicial del medidor) y la actual no puede ser menor. El consumo y el monto se calculan solos; recibo de pago en PDF.
+- **Tarifa del agua**: precio por m³, lo cambia el superadministrador (menú *Tarifa*, con historial). Cada lectura guarda la tarifa con la que se registró: un cambio no altera lo ya cobrado ni las deudas emitidas.
+- **Multas**: individuales o masivas, con tarifas configurables y recibo en PDF.
+- **Finanzas**: un balance por mes. El **agua y las multas cobradas se suman solas** al mes en que se cobraron (el agua, desde octubre de 2026: ajuste `finanzas_agua_desde`); a mano solo se cargan *otros ingresos* y egresos. Comprobantes privados y **QR de pago** de la OTB con fecha de vencimiento (avisa 7 días antes).
+- **Arqueo de caja**: lo cobrado en el mes por QR y en efectivo, con acta en PDF para firmar.
+- **Reportes**: totales cobrados y pendientes por gestión y mes, y lista de socios morosos con aviso por WhatsApp. Se exportan a Excel (CSV).
+- **Mis pagos** (socio): historial de pagos y recibos en PDF.
 - **Socios**: alta, edición y baja. Dar de baja a un socio **no borra su historial** (SoftDeletes).
 
 ---
@@ -54,23 +59,27 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
+Define también el primer superadministrador en `.env` (contraseña de 10 caracteres o más):
+
+```dotenv
+ADMIN_NOMBRE="Superadministrador"
+ADMIN_EMAIL=presidente@tu-otb.com
+ADMIN_PASSWORD=una-clave-segura
+```
+
 Luego:
 
 ```bash
-php artisan migrate --seed    # tablas, roles, tarifas de multas y el primer superadministrador
-php artisan storage:link      # hace visible el QR de pago
+php artisan migrate           # tablas, roles, tarifas de multas y el superadministrador de ADMIN_EMAIL
 npm run build                 # compila CSS y JS
 php artisan serve             # http://127.0.0.1:8000
 ```
 
 ### Primer acceso
 
-El seeder crea al superadministrador:
+Ingresa con `ADMIN_EMAIL` y `ADMIN_PASSWORD`. Ya no existe una clave fija: si `ADMIN_EMAIL` no está definido, no se crea ningún superadministrador.
 
-- Correo: `admin@otb.com`
-- Contraseña: `12345678`
-
-**Cámbiala apenas entres** (menú → Mi Perfil).
+El QR de pago y los comprobantes se guardan en la base de datos (tabla `archivos`), así que no hace falta `storage:link` y sobreviven a los redespliegues del hosting.
 
 ---
 
@@ -139,6 +148,10 @@ tests/Feature/                  Pruebas por módulo
 La aplicación está en español (`APP_LOCALE=es`) y en hora de Bolivia (`APP_TIMEZONE=America/La_Paz`).
 
 ## Para publicar en un servidor
+
+La versión en línea está en **Wasmer** (`https://h20-control-proyecto.wasmer.app`): cada push a `main` la vuelve a desplegar y ejecuta las migraciones. Las variables (`ADMIN_*`, base de datos, `APP_KEY`) se configuran en el panel de Wasmer.
+
+Para cualquier servidor:
 
 - `APP_ENV=production` y `APP_DEBUG=false`
 - `LOG_LEVEL=warning`

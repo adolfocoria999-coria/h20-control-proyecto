@@ -20,9 +20,17 @@ class PasswordController extends Controller
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
+        $teniaClaveTemporal = $request->user()->debe_cambiar_clave;
+
         $request->user()->update([
             'password' => Hash::make($validated['password']),
+            'debe_cambiar_clave' => false,
         ]);
+
+        // Con la contraseña temporal reemplazada, ya puede usar el sistema
+        if ($teniaClaveTemporal) {
+            return redirect($request->user()->rutaInicio())->with('success', 'Contraseña actualizada ✓ Ya puedes usar el sistema.');
+        }
 
         return back()->with('status', 'password-updated');
     }
