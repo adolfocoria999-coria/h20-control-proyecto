@@ -138,6 +138,7 @@ class PagosDelSocio
     private function presentar(object $fila, Collection $cobradores): object
     {
         return (object) [
+            'id' => (int) $fila->id,
             'tipo' => $fila->tipo,
             'fecha' => Carbon::parse($fila->fecha),
             'concepto' => $fila->tipo === 'agua'

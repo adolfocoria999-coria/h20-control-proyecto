@@ -158,6 +158,9 @@
                                             @if($m->metodo_pago)
                                                 <div class="mt-1 text-xs font-bold text-sky-800">{{ $m->metodo_pago->icono() }} {{ $m->metodo_pago->etiqueta() }}</div>
                                             @endif
+                                            <div class="mt-2">
+                                                <x-boton-pdf chico :href="route('recibos.multa', $m)" title="Descargar recibo en PDF">Recibo</x-boton-pdf>
+                                            </div>
                                         @elseif($m->estado === 'condonado')
                                             <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-black border border-purple-200">
                                                 🔵 Condonado

@@ -20,6 +20,7 @@
                     <p class="text-sm text-sky-900 mt-1 font-bold">Recaudación del mes por QR y en efectivo (agua y multas), según la fecha de cobro</p>
                 </div>
                 <div class="mt-4 md:mt-0 flex flex-wrap gap-3 print:hidden">
+                    <x-boton-pdf :href="route('arqueo.pdf', ['gestion' => $arqueo->gestion, 'mes' => $arqueo->mes])">Acta en PDF</x-boton-pdf>
                     <x-boton-excel :href="route('arqueo.exportar', ['gestion' => $arqueo->gestion, 'mes' => $arqueo->mes])" />
                     <button type="button" onclick="window.print()"
                             class="inline-flex items-center justify-center gap-2 whitespace-nowrap bg-white hover:bg-sky-50 text-blue-900 border-2 border-blue-200 px-5 py-3 rounded-xl font-extrabold text-sm shadow-md">

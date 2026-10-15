@@ -20,7 +20,10 @@
                     <h2 class="font-extrabold text-3xl text-blue-950 leading-tight">🧾 Mis Pagos</h2>
                     <p class="text-sm text-sky-900 mt-1 font-bold">Pagos de agua y multas confirmados por Hacienda, con su método de pago</p>
                 </div>
-                <x-boton-excel :href="route('socio.pagos.exportar', request()->query())" class="mt-4 md:mt-0" />
+                <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+                    <x-boton-pdf :href="route('socio.pagos.pdf', request()->query())">Historial en PDF</x-boton-pdf>
+                    <x-boton-excel :href="route('socio.pagos.exportar', request()->query())" />
+                </div>
             </div>
 
             <!-- Filtros -->
@@ -93,6 +96,7 @@
                                 <th class="px-5 py-4 text-left">Método</th>
                                 <th class="px-5 py-4 text-right">Monto</th>
                                 <th class="px-5 py-4 text-left">Registrado por</th>
+                                <th class="px-5 py-4 text-center">Recibo</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-sky-100 text-blue-950">
@@ -116,10 +120,13 @@
                                     </td>
                                     <td data-label="Monto" class="px-5 py-4 text-right whitespace-nowrap font-black text-emerald-700">{{ $bs($pago->monto) }}</td>
                                     <td data-label="Registrado por" class="px-5 py-4 text-xs font-bold text-sky-800">{{ $pago->registrado_por }}</td>
+                                    <td data-label="Recibo" class="px-5 py-4 text-center">
+                                        <x-boton-pdf chico :href="route($pago->tipo === 'agua' ? 'recibos.agua' : 'recibos.multa', $pago->id)" title="Descargar recibo en PDF">Recibo</x-boton-pdf>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-12 text-center font-bold text-sky-700">
+                                    <td colspan="6" class="px-6 py-12 text-center font-bold text-sky-700">
                                         No tienes pagos registrados en {{ $periodo }} con estos filtros.
                                     </td>
                                 </tr>

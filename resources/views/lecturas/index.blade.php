@@ -182,6 +182,10 @@
                                                        class="h-8 rounded-xl">
                                             <span class="hidden lg:inline">Confirmar Pago</span>
                                         </x-boton-pagar>
+                                    @else
+                                        <x-boton-pdf chico :href="route('recibos.agua', $lectura)" title="Descargar recibo en PDF">
+                                            <span class="hidden lg:inline">Recibo</span>
+                                        </x-boton-pdf>
                                     @endif
 
                                     <a href="{{ route('lecturas.edit', $lectura->id) }}" 

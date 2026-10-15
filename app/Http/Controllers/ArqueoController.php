@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\Arqueo;
 use App\Services\CsvExporter;
+use App\Services\DocumentoPdf;
 use App\Services\Historial;
 use App\Support\Meses;
 use Illuminate\Http\Request;
@@ -61,6 +62,22 @@ class ArqueoController extends Controller
             ['Fecha de cobro', 'Tipo', 'Concepto', 'Socio', 'Método', 'Cobrado por', 'Monto (Bs.)'],
             $detalle->concat($pie)
         );
+    }
+
+    // Acta de arqueo para imprimir y firmar
+    public function pdf(Request $request)
+    {
+        $arqueo = $this->arqueoDesde($request);
+        $periodo = Meses::nombre($arqueo->mes).' '.$arqueo->gestion;
+
+        Historial::registrar('exportacion', 'finanzas', "Descargó el acta de arqueo de caja de {$periodo} en PDF");
+
+        return DocumentoPdf::descargar('pdf.arqueo', [
+            'periodo' => $periodo,
+            'resumen' => $arqueo->resumen(),
+            'cobros' => $arqueo->cobros(),
+            'conSinMetodo' => $arqueo->haySinMetodo(),
+        ], 'arqueo_'.$arqueo->gestion.'_'.str_pad((string) $arqueo->mes, 2, '0', STR_PAD_LEFT).'.pdf');
     }
 
     private function arqueoDesde(Request $request): Arqueo

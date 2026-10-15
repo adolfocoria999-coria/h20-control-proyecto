@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\MetodoPago;
 use App\Services\CsvExporter;
+use App\Services\DocumentoPdf;
 use App\Services\Historial;
 use App\Services\PagosDelSocio;
 use App\Support\Meses;
@@ -45,6 +46,22 @@ class MisPagosController extends Controller
             ['Fecha de pago', 'Concepto', 'Método', 'Monto (Bs.)', 'Registrado por'],
             $filas
         );
+    }
+
+    public function pdf(Request $request)
+    {
+        $pagos = $this->pagos($request);
+        ['gestion' => $gestion, 'mes' => $mes] = $pagos->filtros;
+        $periodo = $gestion ? ($mes ? Meses::nombre($mes).' '.$gestion : "Gestión {$gestion}") : 'Todo el historial';
+
+        Historial::registrar('exportacion', 'usuarios', 'Descargó su historial de pagos en PDF');
+
+        return DocumentoPdf::descargar('pdf.mis-pagos', [
+            'socio' => $request->user(),
+            'pagos' => $pagos->todos(),
+            'totales' => $pagos->totales(),
+            'periodo' => $periodo,
+        ], 'mis_pagos_'.date('Y-m-d').'.pdf');
     }
 
     private function pagos(Request $request): PagosDelSocio

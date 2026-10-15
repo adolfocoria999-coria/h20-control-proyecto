@@ -8,6 +8,7 @@ use App\Http\Controllers\MisPagosController;
 use App\Http\Controllers\MultaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrPagoController;
+use App\Http\Controllers\ReciboController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\TarifaMultaController;
 use App\Http\Controllers\UserController;
@@ -65,6 +66,7 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::resource('lecturas', LecturaController::class)->except('show');
 
     // ARQUEO DE CAJA MENSUAL (QR / efectivo)
+    Route::get('/finanzas/arqueo/pdf', [ArqueoController::class, 'pdf'])->name('arqueo.pdf');
     Route::get('/finanzas/arqueo/exportar', [ArqueoController::class, 'exportar'])->name('arqueo.exportar');
     Route::get('/finanzas/arqueo', [ArqueoController::class, 'index'])->name('arqueo.index');
 
@@ -91,6 +93,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/mi-consumo', [LecturaController::class, 'miConsumo'])->name('socio.consumo');
 
     // Historial de pagos confirmados del socio (agua y multas)
+    Route::get('/mis-pagos/pdf', [MisPagosController::class, 'pdf'])->name('socio.pagos.pdf');
     Route::get('/mis-pagos/exportar', [MisPagosController::class, 'exportar'])->name('socio.pagos.exportar');
     Route::get('/mis-pagos', [MisPagosController::class, 'index'])->name('socio.pagos');
 
@@ -103,6 +106,10 @@ Route::middleware('auth')->group(function () {
     // Multas: el socio solo ve las suyas (filtrado en el controlador)
     Route::get('/multas/exportar', [MultaController::class, 'exportar'])->name('multas.exportar');
     Route::get('/multas', [MultaController::class, 'index'])->name('multas.index');
+
+    // Recibos en PDF de pagos confirmados (el socio solo descarga los suyos)
+    Route::get('/recibos/agua/{lectura}', [ReciboController::class, 'agua'])->name('recibos.agua');
+    Route::get('/recibos/multa/{multa}', [ReciboController::class, 'multa'])->name('recibos.multa');
 
     // Perfil de Usuario
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
