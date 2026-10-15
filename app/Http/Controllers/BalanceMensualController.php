@@ -138,8 +138,10 @@ class BalanceMensualController extends Controller
                 $b->id,
                 $b->mes_nombre,
                 $b->gestion,
-                CsvExporter::dinero($b->ingresos),
+                CsvExporter::dinero($b->ingresos_agua),
                 CsvExporter::dinero($b->ingresos_multas),
+                CsvExporter::dinero($b->ingresos),
+                CsvExporter::dinero($b->ingresos_totales),
                 CsvExporter::dinero($b->egresos),
                 CsvExporter::dinero($b->saldo_final),
                 $b->detalle ?? 'Sin observaciones',
@@ -149,7 +151,7 @@ class BalanceMensualController extends Controller
 
         return CsvExporter::descargar(
             'finanzas_otb_'.date('Y-m-d_H-i').'.csv',
-            ['ID', 'Mes', 'Gestión', 'Ingresos (Bs.)', 'Multas cobradas (Bs.)', 'Egresos (Bs.)', 'Saldo Final (Bs.)', 'Detalles'],
+            ['ID', 'Mes', 'Gestión', 'Agua cobrada (Bs.)', 'Multas cobradas (Bs.)', 'Otros ingresos (Bs.)', 'Total ingresos (Bs.)', 'Egresos (Bs.)', 'Saldo Final (Bs.)', 'Detalles'],
             $filas
         );
     }

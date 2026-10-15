@@ -34,8 +34,12 @@
 
                         <!-- Ingresos -->
                         <div>
-                            <label class="block text-sm font-extrabold text-blue-950 mb-2">Ingresos (Bs.) <span class="font-bold text-sky-700">— sin multas</span></label>
-                            <p class="mb-1.5 text-xs font-bold text-sky-800">Las multas cobradas se suman solas; no las incluyas aquí.</p>
+                            @php $inicioAgua = \App\Models\BalanceMensual::aguaDesde(); @endphp
+                            <label class="block text-sm font-extrabold text-blue-950 mb-2">Otros ingresos (Bs.)</label>
+                            <p class="mb-1.5 text-xs font-bold text-sky-800">
+                                Cuotas extraordinarias, donaciones, etc. El agua y las multas cobradas se suman solas: no las incluyas
+                                (para meses anteriores a {{ \App\Support\Meses::nombre($inicioAgua->month) }} {{ $inicioAgua->year }}, el agua sí va aquí).
+                            </p>
                             <input type="number" step="0.01" name="ingresos" required min="0" placeholder="Ej: 5000.00" value="{{ old('ingresos') }}"
                                 class="w-full rounded-xl border border-sky-200 px-4 py-3 focus:ring-2 focus:ring-green-500 font-bold text-green-700 bg-sky-50">
                         </div>

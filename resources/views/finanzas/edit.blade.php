@@ -34,9 +34,15 @@
 
                         <!-- Ingresos -->
                         <div>
-                            <label class="block text-sm font-extrabold text-blue-950 mb-2">Ingresos (Bs.) <span class="font-bold text-sky-700">— sin multas</span></label>
+                            <label class="block text-sm font-extrabold text-blue-950 mb-2">
+                                {{ $balance->con_agua_automatica ? 'Otros ingresos (Bs.)' : 'Otros ingresos, incluida el agua (Bs.)' }}
+                                <span class="font-bold text-sky-700">— {{ $balance->con_agua_automatica ? 'sin agua ni multas' : 'sin multas' }}</span>
+                            </label>
                             <input type="number" step="0.01" name="ingresos" required min="0" value="{{ old('ingresos', $balance->ingresos) }}"
                                 class="w-full rounded-xl border border-sky-200 px-4 py-3 focus:ring-2 focus:ring-green-500 font-bold text-green-700 bg-sky-50">
+                            @if($balance->con_agua_automatica)
+                                <p class="mt-1.5 text-xs font-bold text-sky-800">💧 Además se suman automáticamente Bs. {{ number_format($balance->ingresos_agua, 2) }} de agua cobrada este mes.</p>
+                            @endif
                             @if($balance->ingresos_multas > 0)
                                 <p class="mt-1.5 text-xs font-bold text-sky-800">➕ Además se suman automáticamente Bs. {{ number_format($balance->ingresos_multas, 2) }} de multas cobradas este mes.</p>
                             @endif

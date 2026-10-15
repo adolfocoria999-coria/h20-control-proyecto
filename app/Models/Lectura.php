@@ -65,6 +65,22 @@ class Lectura extends Model
                 $lectura->cobrado_por = null;
             }
         });
+
+        // Cualquier cambio en una lectura cobrada actualiza Finanzas (agua cobrada del mes)
+        static::saved(fn (Lectura $lectura) => $lectura->actualizarFinanzas());
+        static::deleted(fn (Lectura $lectura) => $lectura->actualizarFinanzas());
+    }
+
+    /**
+     * Recalcula los meses afectados: donde estaba cobrada antes y donde está ahora.
+     */
+    private function actualizarFinanzas(): void
+    {
+        collect([$this->getOriginal('fecha_pago'), $this->fecha_pago])
+            ->filter()
+            ->map(fn ($fecha) => [$fecha->month, $fecha->year])
+            ->unique(fn ($periodo) => implode('-', $periodo))
+            ->each(fn ($periodo) => BalanceMensual::recalcularAgua(...$periodo));
     }
 
     // Quién registró el cobro

@@ -172,11 +172,13 @@ class PeriodosYMultasEnFinanzasTest extends TestCase
         $this->actingAs($this->socio)->get('/finanzas')
             ->assertViewHas('cajaActual', 980.0)
             ->assertViewHas('totalIngresos', 1080.0)
-            ->assertSee('incl. Bs. 80.00 de multas');
+            ->assertSee('Multas: Bs. 80.00')
+            ->assertSee('Otros (incl. agua): Bs. 1,000.00');
 
         $csv = $this->actingAs($this->admin)->get('/finanzas/exportar')->streamedContent();
         $this->assertStringContainsString('Multas cobradas (Bs.)', $csv);
-        $this->assertStringContainsString('1000,00;80,00;100,00;980,00', $csv);
+        // Agua (mayo es anterior al inicio del agua automática) ; multas ; otros ; total ; egresos ; saldo
+        $this->assertStringContainsString('0,00;80,00;1000,00;1080,00;100,00;980,00', $csv);
     }
 
     public function test_editar_el_balance_conserva_lo_cobrado_por_multas(): void

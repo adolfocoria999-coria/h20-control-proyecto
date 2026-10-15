@@ -36,6 +36,13 @@
                 </div>
             </div>
 
+            <!-- Cómo se forman los ingresos -->
+            @php $inicioAgua = \App\Models\BalanceMensual::aguaDesde(); @endphp
+            <div class="mb-6 p-4 bg-sky-50 border-l-4 border-sky-500 rounded-r-xl text-xs font-bold text-sky-900">
+                💧 Desde <span class="font-black">{{ \App\Support\Meses::nombre($inicioAgua->month) }} {{ $inicioAgua->year }}</span>, el agua cobrada en Lecturas y las multas cobradas se suman solas al balance del mes en que se cobraron.
+                En los meses anteriores, el agua está incluida en "Otros ingresos" (se cargaba a mano).
+            </div>
+
             <!-- Widgets de Resumen -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <!-- Caja Actual -->
@@ -214,8 +221,19 @@
                                 </td>
                                 <td data-label="Ingresos" class="px-6 py-4 whitespace-nowrap">
                                     <span class="text-sm font-bold text-green-600">+ Bs. {{ number_format($balance->ingresos_totales, 2) }}</span>
-                                    @if($balance->ingresos_multas > 0)
-                                        <div class="text-xs font-bold text-sky-700 mt-0.5" title="Se suma automáticamente al cobrar multas">incl. Bs. {{ number_format($balance->ingresos_multas, 2) }} de multas</div>
+                                    <div class="mt-1 space-y-0.5 text-xs font-bold text-sky-700">
+                                        @if($balance->con_agua_automatica)
+                                            <div title="Se suma automáticamente al cobrar lecturas">💧 Agua: Bs. {{ number_format($balance->ingresos_agua, 2) }}</div>
+                                        @endif
+                                        @if($balance->ingresos_multas > 0)
+                                            <div title="Se suma automáticamente al cobrar multas">⚖️ Multas: Bs. {{ number_format($balance->ingresos_multas, 2) }}</div>
+                                        @endif
+                                        @if($balance->ingresos > 0)
+                                            <div title="Cargado a mano por Hacienda">✍️ {{ $balance->con_agua_automatica ? 'Otros' : 'Otros (incl. agua)' }}: Bs. {{ number_format($balance->ingresos, 2) }}</div>
+                                        @endif
+                                    </div>
+                                    @if($esAdmin)
+                                        <a href="{{ route('arqueo.index', ['gestion' => $balance->gestion, 'mes' => $balance->mes]) }}" class="inline-block mt-1 text-xs font-extrabold text-blue-700 hover:underline" title="Cada cobro del mes: socio, método y quién cobró">🔎 Ver detalle de cobros</a>
                                     @endif
                                 </td>
                                 <td data-label="Egresos" class="px-6 py-4 whitespace-nowrap">
