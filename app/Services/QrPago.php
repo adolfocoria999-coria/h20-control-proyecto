@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * QR de cobro de la OTB: la imagen vive en el disco `public` (los socios la ven)
+ * QR de cobro de la OTB: la imagen vive en el disco `archivos` (base de datos)
  * y su ruta y fecha de vencimiento se guardan en `ajustes`.
  */
 class QrPago
@@ -54,11 +54,11 @@ class QrPago
 
         if ($imagen) {
             // Nombre único: evita que el navegador muestre el QR viejo desde caché
-            $ruta = $imagen->storeAs('qr', 'qr_otb_'.now()->format('YmdHis').'.'.$imagen->extension(), 'public');
+            $ruta = $imagen->storeAs('qr', 'qr_otb_'.now()->format('YmdHis').'.'.$imagen->extension(), 'archivos');
             Ajuste::guardar(self::CLAVE_RUTA, $ruta);
 
             if ($anterior->ruta && $anterior->ruta !== $ruta) {
-                Storage::disk('public')->delete($anterior->ruta);
+                Storage::disk('archivos')->delete($anterior->ruta);
             }
         }
 
@@ -69,12 +69,14 @@ class QrPago
 
     public function existe(): bool
     {
-        return $this->ruta !== null && Storage::disk('public')->exists($this->ruta);
+        return $this->ruta !== null && Storage::disk('archivos')->exists($this->ruta);
     }
 
     public function url(): ?string
     {
-        return $this->existe() ? asset('storage/'.$this->ruta) : null;
+        // Se sirve por una ruta de Laravel: no depende del enlace public/storage,
+        // que en el hosting no existe. El nombre del archivo evita el QR viejo en caché.
+        return $this->existe() ? route('finanzas.qr.imagen', ['v' => basename($this->ruta)]) : null;
     }
 
     /**

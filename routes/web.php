@@ -96,6 +96,7 @@ Route::middleware('auth')->group(function () {
 
     // Finanzas: consulta pública para los socios (transparencia de la OTB)
     Route::get('/finanzas/exportar', [BalanceMensualController::class, 'exportar'])->name('finanzas.exportar');
+    Route::get('/finanzas/qr/imagen', [QrPagoController::class, 'imagen'])->name('finanzas.qr.imagen');
     Route::get('/finanzas', [BalanceMensualController::class, 'index'])->name('finanzas.index');
     Route::get('/finanzas/{finanza}/comprobante', [BalanceMensualController::class, 'comprobante'])->name('finanzas.comprobante');
 

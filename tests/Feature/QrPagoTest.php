@@ -23,7 +23,7 @@ class QrPagoTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Storage::fake('public');
+        Storage::fake('archivos');
         $this->seed(RolSeeder::class);
 
         $this->admin = User::factory()->create(['rol_id' => RolUsuario::Admin->value]);
@@ -40,7 +40,7 @@ class QrPagoTest extends TestCase
 
     private function qrQueVenceEn(int $dias): void
     {
-        Storage::disk('public')->put('qr/actual.png', 'imagen');
+        Storage::disk('archivos')->put('qr/actual.png', 'imagen');
         Ajuste::guardar(QrPago::CLAVE_RUTA, 'qr/actual.png');
         Ajuste::guardar(QrPago::CLAVE_VENCE, today()->addDays($dias)->toDateString());
     }
@@ -55,7 +55,7 @@ class QrPagoTest extends TestCase
         ])->assertRedirect(route('finanzas.index').'#qr');
 
         $qr = QrPago::actual();
-        Storage::disk('public')->assertExists($qr->ruta);
+        Storage::disk('archivos')->assertExists($qr->ruta);
         $this->assertSame($vence, $qr->venceEl->toDateString());
         $this->assertSame(QrPago::VIGENTE, $qr->estado());
     }
@@ -82,8 +82,8 @@ class QrPagoTest extends TestCase
             'qr_imagen' => $this->imagenPng('nuevo.png'),
             'qr_vence_el' => today()->addYear()->toDateString(),
         ]);
-        Storage::disk('public')->assertMissing('qr/actual.png');
-        Storage::disk('public')->assertExists(QrPago::actual()->ruta);
+        Storage::disk('archivos')->assertMissing('qr/actual.png');
+        Storage::disk('archivos')->assertExists(QrPago::actual()->ruta);
     }
 
     public function test_el_socio_no_puede_cambiar_el_qr(): void
@@ -131,12 +131,38 @@ class QrPagoTest extends TestCase
     {
         $this->qrQueVenceEn(10);
         $this->actingAs($this->socio)->get('/mi-consumo')
-            ->assertSee('storage/qr/actual.png')
+            ->assertSee('finanzas/qr/imagen')
             ->assertDontSee('QR de pago no disponible');
+        $this->actingAs($this->socio)->get('/finanzas/qr/imagen')->assertOk();
 
         $this->qrQueVenceEn(-1);
         $this->actingAs($this->socio)->get('/mi-consumo')
-            ->assertDontSee('storage/qr/actual.png')
+            ->assertDontSee('finanzas/qr/imagen')
             ->assertSee('QR de pago no disponible');
+        $this->actingAs($this->socio)->get('/finanzas/qr/imagen')->assertNotFound();
+    }
+
+    // La imagen se sirve desde Laravel: funciona aunque no exista el enlace public/storage
+    public function test_la_imagen_del_qr_se_sirve_sin_depender_de_public_storage(): void
+    {
+        $this->actingAs($this->admin)->get('/finanzas/qr/imagen')->assertNotFound();
+
+        $this->actingAs($this->admin)->post('/finanzas/qr', [
+            'qr_imagen' => $this->imagenPng('qr.png'),
+            'qr_vence_el' => today()->addMonth()->toDateString(),
+        ]);
+
+        $this->actingAs($this->admin)->get('/finanzas')->assertSee(QrPago::actual()->url(), false);
+        $this->actingAs($this->admin)->get('/finanzas/qr/imagen')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/png');
+
+        // Un QR vencido lo sigue viendo Hacienda para reemplazarlo
+        Ajuste::guardar(QrPago::CLAVE_VENCE, today()->subDay()->toDateString());
+        $this->actingAs($this->admin)->get('/finanzas/qr/imagen')->assertOk();
+
+        $this->get('/finanzas/qr/imagen')->assertOk(); // sigue con la sesión del admin
+        auth()->logout();
+        $this->get('/finanzas/qr/imagen')->assertRedirect('/login');
     }
 }

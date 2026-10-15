@@ -30,6 +30,13 @@ return [
 
     'disks' => [
 
+        // QR de pago y comprobantes: se guardan en la tabla `archivos` para que
+        // sobrevivan a los redespliegues del hosting (App\Support\ArchivosEnBaseDeDatos)
+        'archivos' => [
+            'driver' => 'base_de_datos',
+            'throw' => false,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

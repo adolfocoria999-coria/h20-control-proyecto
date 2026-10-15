@@ -277,26 +277,33 @@ class ModulosTest extends TestCase
 
     public function test_los_comprobantes_se_guardan_en_privado_y_requieren_sesion(): void
     {
-        Storage::fake('local');
-        Storage::fake('public');
+        // Sin Storage::fake: se prueba el disco real, que guarda en la base de datos
+        $pdf = "%PDF-1.4\n".random_bytes(2000);
 
         $this->actingAs($this->admin)->post('/finanzas', [
             'mes' => 3, 'gestion' => 2026, 'ingresos' => 100, 'egresos' => 0,
-            'comprobante' => UploadedFile::fake()->create('recibo.pdf', 10, 'application/pdf'),
+            'comprobante' => UploadedFile::fake()->createWithContent('recibo.pdf', $pdf),
         ]);
 
         $balance = BalanceMensual::sole();
-        Storage::disk('local')->assertExists($balance->comprobante_url);
-        Storage::disk('public')->assertMissing($balance->comprobante_url);
+        $this->assertDatabaseHas('archivos', ['ruta' => $balance->comprobante_url, 'tamano' => strlen($pdf)]);
+        $this->assertSame($pdf, Storage::disk('archivos')->get($balance->comprobante_url));
+        $this->assertFalse(Storage::disk('public')->exists($balance->comprobante_url));
 
         // Sin sesión: redirige al login
         auth()->logout();
         $this->get("/finanzas/{$balance->id}/comprobante")->assertRedirect(route('login'));
 
         // Con sesión (cualquier rol, igual que la vista de Finanzas)
-        $this->actingAs($this->socio)->get("/finanzas/{$balance->id}/comprobante")->assertOk();
+        $respuesta = $this->actingAs($this->socio)->get("/finanzas/{$balance->id}/comprobante")->assertOk();
+        $this->assertSame($pdf, $respuesta->streamedContent());
+        $this->assertSame('application/pdf', $respuesta->headers->get('Content-Type'));
         $this->actingAs($this->socio)->get("/finanzas/{$balance->id}/comprobante?descargar=1")
             ->assertDownload('comprobante_Marzo_2026.pdf');
+
+        // Al borrar el balance se borra también su archivo
+        $this->actingAs($this->superadmin)->delete("/finanzas/{$balance->id}");
+        $this->assertDatabaseMissing('archivos', ['ruta' => $balance->comprobante_url]);
     }
 
     public function test_balance_sin_comprobante_responde_404(): void

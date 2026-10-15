@@ -66,7 +66,7 @@ class BalanceMensualController extends Controller
         $datos = $request->safe()->except('comprobante');
 
         if ($request->hasFile('comprobante')) {
-            $datos['comprobante_url'] = $request->file('comprobante')->store('comprobantes', 'local');
+            $datos['comprobante_url'] = $request->file('comprobante')->store('comprobantes', 'archivos');
         }
 
         // El saldo final lo calcula el modelo
@@ -87,9 +87,9 @@ class BalanceMensualController extends Controller
         // Si sube un archivo nuevo, eliminamos el anterior del almacenamiento local
         if ($request->hasFile('comprobante')) {
             if ($finanza->comprobante_url) {
-                Storage::disk('local')->delete($finanza->comprobante_url);
+                Storage::disk('archivos')->delete($finanza->comprobante_url);
             }
-            $datos['comprobante_url'] = $request->file('comprobante')->store('comprobantes', 'local');
+            $datos['comprobante_url'] = $request->file('comprobante')->store('comprobantes', 'archivos');
         }
 
         $finanza->update($datos);
@@ -103,7 +103,7 @@ class BalanceMensualController extends Controller
         abort_unless(auth()->user()->esSuperAdmin(), 403, 'Solo el superadministrador puede eliminar balances.');
 
         if ($finanza->comprobante_url) {
-            Storage::disk('local')->delete($finanza->comprobante_url);
+            Storage::disk('archivos')->delete($finanza->comprobante_url);
         }
 
         $finanza->delete();
@@ -119,13 +119,13 @@ class BalanceMensualController extends Controller
     {
         $ruta = $finanza->comprobante_url;
 
-        abort_unless($ruta && Storage::disk('local')->exists($ruta), 404, 'Este balance no tiene comprobante.');
+        abort_unless($ruta && Storage::disk('archivos')->exists($ruta), 404, 'Este balance no tiene comprobante.');
 
         $nombre = "comprobante_{$finanza->mes_nombre}_{$finanza->gestion}.".pathinfo($ruta, PATHINFO_EXTENSION);
 
         return $request->boolean('descargar')
-            ? Storage::disk('local')->download($ruta, $nombre)
-            : Storage::disk('local')->response($ruta, $nombre);
+            ? Storage::disk('archivos')->download($ruta, $nombre)
+            : Storage::disk('archivos')->response($ruta, $nombre);
     }
 
     public function exportar(Request $request)

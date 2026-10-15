@@ -99,7 +99,7 @@ class MultaController extends Controller
         $multa->update([
             'estado' => Multa::PAGADO,
             'metodo_pago' => $datos['metodo_pago'],
-            'comprobante_pago' => $request->file('comprobante')?->store('comprobantes_multas', 'local'),
+            'comprobante_pago' => $request->file('comprobante')?->store('comprobantes_multas', 'archivos'),
         ]);
 
         return back()->with('success', 'Pago de multa registrado ('.MetodoPago::from($datos['metodo_pago'])->etiqueta().'). ✅');

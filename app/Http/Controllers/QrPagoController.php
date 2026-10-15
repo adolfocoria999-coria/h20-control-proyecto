@@ -5,9 +5,23 @@ namespace App\Http\Controllers;
 use App\Services\Historial;
 use App\Services\QrPago;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class QrPagoController extends Controller
 {
+    /**
+     * Imagen del QR. Los socios solo la ven mientras esté disponible (no vencida).
+     */
+    public function imagen(Request $request)
+    {
+        $qr = QrPago::actual();
+
+        abort_unless($qr->existe(), 404, 'No hay un QR de pago cargado.');
+        abort_if($request->user()->esSocio() && ! $qr->disponible(), 404, 'El QR de pago no está disponible.');
+
+        return Storage::disk('archivos')->response($qr->ruta, 'qr_otb.'.pathinfo($qr->ruta, PATHINFO_EXTENSION));
+    }
+
     /**
      * Sube un QR nuevo y/o cambia su fecha de vencimiento (Superadmin y Hacienda).
      */
