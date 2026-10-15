@@ -70,28 +70,9 @@ class LecturaRequest extends FormRequest
      */
     private function noSuperaElMesSiguiente(string $atributo, mixed $valor, Closure $fallar): void
     {
-        if (! $this->siguiente || ! is_numeric($valor)) {
-            return;
+        if (is_numeric($valor) && $error = Lectura::errorConSiguiente($this->siguiente, (float) $valor)) {
+            $fallar($error);
         }
-
-        $periodo = $this->siguiente->periodo;
-
-        if ($this->siguiente->estado === Lectura::PAGADO) {
-            if ((float) $valor !== (float) $this->siguiente->lectura_anterior) {
-                $fallar("La lectura de {$periodo} ya se cobró partiendo de {$this->m3($this->siguiente->lectura_anterior)}: la lectura actual debe ser {$this->m3($this->siguiente->lectura_anterior)}.");
-            }
-
-            return;
-        }
-
-        if ((float) $valor > (float) $this->siguiente->lectura_actual) {
-            $fallar("La lectura actual no puede ser mayor que la de {$periodo} ({$this->m3($this->siguiente->lectura_actual)}).");
-        }
-    }
-
-    private function m3($valor): string
-    {
-        return rtrim(rtrim(number_format((float) $valor, 2, '.', ''), '0'), '.').' m³';
     }
 
     public function messages(): array

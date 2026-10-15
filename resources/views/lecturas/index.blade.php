@@ -15,6 +15,9 @@
                     <!-- 📊 BOTÓN DE EXPORTACIÓN A EXCEL -->
                     <x-boton-excel :href="route('lecturas.exportar', request()->query())" />
 
+                    <a href="{{ route('lecturas.planilla') }}" class="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-extrabold shadow-lg shadow-emerald-400/50 transition-all">
+                        📋 Carga rápida del mes
+                    </a>
                     <a href="{{ route('lecturas.create') }}" class="inline-flex items-center justify-center bg-blue-700 hover:bg-blue-800 text-white px-5 py-3 rounded-xl font-extrabold shadow-lg shadow-blue-400/50 transition-all">
                         + Registrar Nueva Lectura
                     </a>

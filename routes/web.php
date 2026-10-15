@@ -6,6 +6,7 @@ use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\LecturaController;
 use App\Http\Controllers\MisPagosController;
 use App\Http\Controllers\MultaController;
+use App\Http\Controllers\PlanillaLecturasController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrPagoController;
 use App\Http\Controllers\ReciboController;
@@ -61,6 +62,10 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
     // Aviso de deuda/corte por WhatsApp (incluye socios dados de baja que aún deben)
     Route::get('/reportes/socios/{socio}/whatsapp', [ReporteController::class, 'notificar'])->name('reportes.notificar')->withTrashed();
+
+    // Carga rápida del mes: todos los socios en una planilla
+    Route::get('/lecturas/planilla', [PlanillaLecturasController::class, 'index'])->name('lecturas.planilla');
+    Route::post('/lecturas/planilla', [PlanillaLecturasController::class, 'store'])->name('lecturas.planilla.store');
 
     // RUTA AJAX: Obtener la última lectura
     Route::get('/lecturas/ultima/{usuario_id}', [LecturaController::class, 'obtenerUltimaLectura'])->name('lecturas.ultima');

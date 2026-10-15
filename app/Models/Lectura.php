@@ -140,6 +140,34 @@ class Lectura extends Model
     }
 
     /**
+     * Error si la lectura actual no encaja con la del mes siguiente ya registrado
+     * (un mes atrasado o corregido): no puede superarla y, si ese mes ya se cobró,
+     * debe ser igual a su lectura anterior. Null si está bien.
+     */
+    public static function errorConSiguiente(?self $siguiente, float $actual): ?string
+    {
+        if (! $siguiente) {
+            return null;
+        }
+
+        if ($siguiente->estado === self::PAGADO) {
+            return $actual !== (float) $siguiente->lectura_anterior
+                ? "La lectura de {$siguiente->periodo} ya se cobró partiendo de ".self::m3($siguiente->lectura_anterior).': la lectura actual debe ser '.self::m3($siguiente->lectura_anterior).'.'
+                : null;
+        }
+
+        return $actual > (float) $siguiente->lectura_actual
+            ? "La lectura actual no puede ser mayor que la de {$siguiente->periodo} (".self::m3($siguiente->lectura_actual).').'
+            : null;
+    }
+
+    // "1512 m³", "12.5 m³"
+    public static function m3($valor): string
+    {
+        return rtrim(rtrim(number_format((float) $valor, 2, '.', ''), '0'), '.').' m³';
+    }
+
+    /**
      * Si se registró o corrigió un mes intermedio, la lectura del mes siguiente
      * (aún sin cobrar) parte de esta lectura actual.
      */
