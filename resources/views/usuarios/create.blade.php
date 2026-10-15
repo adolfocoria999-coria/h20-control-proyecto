@@ -13,42 +13,7 @@
                     <form action="{{ route('usuarios.store') }}" method="POST">
                         @csrf
                         
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Nombre Completo</label>
-                            <input type="text" name="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-bold mb-2">Carnet de Identidad (C.I.)</label>
-                                <input type="text" name="ci" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-bold mb-2">Teléfono (WhatsApp)</label>
-                                <input type="text" name="telefono" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-gray-700 text-sm font-bold mb-2">Correo Electrónico</label>
-                                <input type="email" name="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 text-sm font-bold mb-2">Contraseña Temporal</label>
-                                <input type="password" name="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-6">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Asignar Rol</label>
-                            <select name="rol_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                                <option value="">Seleccione un rol...</option>
-                                @foreach($roles as $rol)
-                                    <option value="{{ $rol->id }}">{{ $rol->nombre }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        @include('usuarios._campos', ['usuario' => null])
 
                         <div class="flex items-center justify-end" style="margin-top: 20px; gap: 15px;">
     <a href="{{ route('usuarios.index') }}" style="background-color: #6b7280; color: white; padding: 10px 20px; border-radius: 6px; font-weight: bold; text-decoration: none; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
