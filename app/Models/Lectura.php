@@ -31,7 +31,7 @@ class Lectura extends Model
     ];
 
     // Datos internos del cobro: el historial ya registra la acción de pago
-    protected array $ignorarEnHistorial = ['fecha_pago', 'monto_pagado', 'cobrado_por'];
+    protected array $ignorarEnHistorial = ['fecha_pago', 'monto_pagado', 'cobrado_por', 'tarifa_m3'];
 
     protected function casts(): array
     {
@@ -41,6 +41,7 @@ class Lectura extends Model
             'lectura_anterior' => 'decimal:2',
             'lectura_actual' => 'decimal:2',
             'consumo' => 'decimal:2',
+            'tarifa_m3' => 'decimal:2',
             'metodo_pago' => MetodoPago::class,
             'fecha_pago' => 'datetime',
             'monto_pagado' => 'decimal:2',
@@ -52,6 +53,9 @@ class Lectura extends Model
         // El consumo siempre se deriva de las lecturas
         static::saving(function (Lectura $lectura) {
             $lectura->consumo = (float) $lectura->lectura_actual - (float) $lectura->lectura_anterior;
+
+            // La tarifa se fija al registrar la lectura: si luego cambia, esta conserva su precio
+            $lectura->tarifa_m3 ??= Ajuste::tarifaM3();
 
             // Datos del cobro: se fijan al pagar y se borran si la lectura vuelve a pendiente
             if ($lectura->estado === self::PAGADO) {
@@ -96,11 +100,57 @@ class Lectura extends Model
     }
 
     /**
-     * Monto a cobrar en Bs. según la tarifa por m³ configurada.
+     * Monto en Bs.: lo cobrado si ya se pagó; si no, consumo × la tarifa de la lectura.
      */
     protected function monto(): Attribute
     {
-        return Attribute::get(fn () => round((float) $this->consumo * Ajuste::tarifaM3(), 2));
+        return Attribute::get(fn () => $this->estado === self::PAGADO && $this->monto_pagado !== null
+            ? (float) $this->monto_pagado
+            : round((float) $this->consumo * (float) ($this->tarifa_m3 ?? Ajuste::tarifaM3()), 2));
+    }
+
+    // Número que ordena los periodos (gestión y mes) para compararlos
+    private static function ordenPeriodo(): string
+    {
+        return '(gestion * 12 + mes)';
+    }
+
+    /**
+     * Lectura del socio en el periodo inmediatamente anterior (la última antes de mes/gestión).
+     */
+    public static function anteriorA(int $socioId, int $mes, int $gestion, ?int $ignorar = null): ?self
+    {
+        return static::where('user_id', $socioId)
+            ->when($ignorar, fn ($q) => $q->whereKeyNot($ignorar))
+            ->whereRaw(self::ordenPeriodo().' < ?', [$gestion * 12 + $mes])
+            ->orderByDesc('gestion')->orderByDesc('mes')
+            ->first();
+    }
+
+    /**
+     * Lectura del socio en el periodo inmediatamente siguiente (la primera después de mes/gestión).
+     */
+    public static function siguienteA(int $socioId, int $mes, int $gestion, ?int $ignorar = null): ?self
+    {
+        return static::where('user_id', $socioId)
+            ->when($ignorar, fn ($q) => $q->whereKeyNot($ignorar))
+            ->whereRaw(self::ordenPeriodo().' > ?', [$gestion * 12 + $mes])
+            ->orderBy('gestion')->orderBy('mes')
+            ->first();
+    }
+
+    /**
+     * Si se registró o corrigió un mes intermedio, la lectura del mes siguiente
+     * (aún sin cobrar) parte de esta lectura actual.
+     */
+    public function encadenarSiguiente(): void
+    {
+        $siguiente = self::siguienteA($this->user_id, $this->mes, $this->gestion, $this->id);
+
+        if ($siguiente && $siguiente->estado === self::PENDIENTE
+            && (float) $siguiente->lectura_anterior !== (float) $this->lectura_actual) {
+            $siguiente->update(['lectura_anterior' => $this->lectura_actual]);
+        }
     }
 
     protected function mesNombre(): Attribute

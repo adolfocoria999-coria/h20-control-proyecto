@@ -51,12 +51,13 @@
                     <div style="display: flex; gap: 15px; margin-top: 20px; margin-bottom: 20px;">
                         <div style="flex: 1;">
                             <label for="lectura_anterior" class="block text-sm font-medium text-gray-700 mb-2">Lectura Anterior (m³)</label>
-                            <input type="number" step="any" name="lectura_anterior" id="lectura_anterior" value="{{ $lectura->lectura_anterior }}" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
+                            <input type="number" step="any" min="0" name="lectura_anterior" id="lectura_anterior" value="{{ old('lectura_anterior', $lectura->lectura_anterior) }}" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
+                            <p id="ayuda_anterior" class="mt-1.5 text-xs font-bold text-sky-700"></p>
                         </div>
 
                         <div style="flex: 1;">
                             <label for="lectura_actual" class="block text-sm font-medium text-gray-700 mb-2">Lectura Actual (m³)</label>
-                            <input type="number" step="any" name="lectura_actual" id="lectura_actual" value="{{ $lectura->lectura_actual }}" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
+                            <input type="number" step="any" name="lectura_actual" id="lectura_actual" value="{{ old('lectura_actual', $lectura->lectura_actual) }}" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
                         </div>
                     </div>
 
@@ -98,29 +99,10 @@
 
             if (primerMatch && terminoBusqueda !== "") {
                 selectSocios.value = primerMatch.value;
-                obtenerLecturaPrevia(primerMatch.value); // <-- Llama la API AJAX
+                obtenerLecturaPrevia();
             }
         });
 
-        // 2. Evento por si cambias manualmente el selector
-        selectSocios.addEventListener('change', function() {
-            if (this.value) {
-                obtenerLecturaPrevia(this.value);
-            }
-        });
-
-        // 3. Consulta al backend por la última lectura grabada del socio
-        function obtenerLecturaPrevia(usuarioId) {
-            fetch(`/lecturas/ultima/${usuarioId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.tiene_lectura) {
-                        inputAnterior.value = data.lectura_actual;
-                    } else {
-                        inputAnterior.value = 0;
-                    }
-                })
-                .catch(error => console.error('Error obteniendo la lectura anterior:', error));
-        }
     </script>
+    @include('lecturas._lectura_previa', ['ignorar' => $lectura->id])
 </x-app-layout>

@@ -28,7 +28,7 @@
                                     class="w-full bg-white border border-gray-300 rounded-xl shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 p-3 text-sm font-medium text-gray-800 appearance-none cursor-pointer">
                                 <option value="">-- Selecciona un socio --</option>
                                 @foreach($socios as $socio)
-                                    <option value="{{ $socio->id }}" class="opcion-socio py-2">
+                                    <option value="{{ $socio->id }}" class="opcion-socio py-2" @selected(old('user_id') == $socio->id)>
                                         👤 {{ $socio->name }} (C.I. {{ $socio->ci ?? 'S/N' }})
                                     </option>
                                 @endforeach
@@ -49,7 +49,7 @@
 
                         <div>
                             <label for="gestion" class="block text-sm font-bold text-blue-950 mb-2">Gestión (Año):</label>
-                            <input type="number" name="gestion" id="gestion" value="{{ date('Y') }}" required 
+                            <input type="number" name="gestion" id="gestion" value="{{ old('gestion', date('Y')) }}" required 
                                    class="w-full border border-gray-300 rounded-xl p-3 text-sm font-semibold text-gray-800 bg-white">
                         </div>
                     </div>
@@ -57,13 +57,14 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div>
                             <label for="lectura_anterior" class="block text-sm font-bold text-blue-950 mb-2">Lectura Anterior (m³):</label>
-                            <input type="number" step="any" name="lectura_anterior" id="lectura_anterior" placeholder="0.0" required 
+                            <input type="number" step="any" min="0" name="lectura_anterior" id="lectura_anterior" placeholder="0.0" required value="{{ old('lectura_anterior') }}"
                                    class="w-full border border-gray-300 rounded-xl p-3 text-sm font-black text-blue-950 bg-white focus:ring-2 focus:ring-blue-200 transition-colors">
+                            <p id="ayuda_anterior" class="mt-1.5 text-xs font-bold text-sky-700">Elige un socio: la lectura anterior se completa sola.</p>
                         </div>
 
                         <div>
                             <label for="lectura_actual" class="block text-sm font-bold text-blue-950 mb-2">Lectura Actual (m³):</label>
-                            <input type="number" step="any" name="lectura_actual" id="lectura_actual" placeholder="0.0" required 
+                            <input type="number" step="any" min="0" name="lectura_actual" id="lectura_actual" placeholder="0.0" required value="{{ old('lectura_actual') }}" 
                                    class="w-full border border-gray-300 rounded-xl p-3 text-sm font-black text-blue-950 bg-white focus:ring-2 focus:ring-blue-200">
                         </div>
                     </div>
@@ -128,7 +129,7 @@
             if (primerIdMatch) {
                 selectSocio.value = primerIdMatch;
                 mensajeSinResultados.classList.add('hidden');
-                obtenerLecturaPrevia(primerIdMatch); // <-- Consulta AJAX agregada aquí
+                obtenerLecturaPrevia();
             } else {
                 selectSocio.value = "";
                 mensajeSinResultados.classList.remove('hidden');
@@ -136,39 +137,9 @@
             }
         });
 
-        // 2. Evento por si el usuario cambia el socio directo en el Dropdown
-        selectSocio.addEventListener('change', function() {
-            if (this.value) {
-                obtenerLecturaPrevia(this.value);
-            } else {
-                resetearCampoAnterior();
-            }
-        });
-
-        // 3. Función AJAX que consulta el servidor
-        function obtenerLecturaPrevia(usuarioId) {
-            fetch(`/lecturas/ultima/${usuarioId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.tiene_lectura) {
-                        // Socio antiguo -> Carga valor y bloquea campo
-                        inputAnterior.value = data.lectura_actual;
-                        inputAnterior.setAttribute('readonly', 'readonly');
-                        inputAnterior.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-                        inputAnterior.classList.remove('bg-white');
-                    } else {
-                        // Socio nuevo (1ra lectura) -> Habilita edición manual
-                        resetearCampoAnterior();
-                    }
-                })
-                .catch(error => console.error('Error al obtener la lectura previa:', error));
-        }
-
         function resetearCampoAnterior() {
-            inputAnterior.value = '';
-            inputAnterior.removeAttribute('readonly');
-            inputAnterior.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-            inputAnterior.classList.add('bg-white');
+            obtenerLecturaPrevia();
         }
     </script>
+    @include('lecturas._lectura_previa')
 </x-app-layout>

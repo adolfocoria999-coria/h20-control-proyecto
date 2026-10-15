@@ -13,6 +13,7 @@ use App\Services\QrPago;
 use App\Support\Meses;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class LecturaController extends Controller
@@ -32,9 +33,9 @@ class LecturaController extends Controller
             ->withQueryString();
 
         // Tarjetas de resumen: totales generales calculados en SQL, sin cargar todas las filas
-        $tarifa = Ajuste::tarifaM3();
-        $totalPendiente = round((float) Lectura::pendientes()->sum('consumo') * $tarifa, 2);
-        $totalCobrado = round((float) Lectura::where('estado', Lectura::PAGADO)->sum('consumo') * $tarifa, 2);
+        // Pendiente: consumo × la tarifa de cada lectura. Cobrado: lo que realmente se cobró.
+        $totalPendiente = round((float) Lectura::pendientes()->sum(DB::raw('consumo * coalesce(tarifa_m3, '.Ajuste::tarifaM3().')')), 2);
+        $totalCobrado = round((float) Lectura::where('estado', Lectura::PAGADO)->sum('monto_pagado'), 2);
         $cantPendientes = Lectura::pendientes()->count();
 
         $gestiones = Lectura::query()->distinct()->orderByDesc('gestion')->pluck('gestion');
@@ -63,31 +64,37 @@ class LecturaController extends Controller
     // 2. Formulario para registrar una lectura
     public function create()
     {
-        $socios = User::all();
+        $socios = User::orderBy('name')->get();
 
         return view('lecturas.create', compact('socios'));
     }
 
-    // 2.1 API/AJAX: Obtiene la última lectura registrada de un socio
+    // 2.1 API/AJAX: lectura del mes anterior del socio (y del siguiente, si ya existe)
+    // para completar sola la "lectura anterior" del formulario
     public function obtenerUltimaLectura(Request $request, $usuario_id)
     {
-        $ignoreId = $request->query('ignore_id');
+        $mes = Meses::numero($request->query('mes')) ?? (int) date('n');
+        $gestion = $request->integer('gestion') ?: (int) date('Y');
+        $ignorar = $request->integer('ignore_id') ?: null;
 
-        $ultimaLectura = Lectura::where('user_id', $usuario_id)
-            ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
-            ->orderBy('id', 'desc')
-            ->first();
+        $previa = Lectura::anteriorA((int) $usuario_id, $mes, $gestion, $ignorar);
+        $siguiente = Lectura::siguienteA((int) $usuario_id, $mes, $gestion, $ignorar);
 
         return response()->json([
-            'tiene_lectura' => (bool) $ultimaLectura,
-            'lectura_actual' => $ultimaLectura ? $ultimaLectura->lectura_actual : 0,
+            'tiene_lectura' => (bool) $previa,
+            'lectura_actual' => $previa?->lectura_actual ?? 0,
+            'periodo' => $previa?->periodo,
+            'siguiente' => $siguiente ? [
+                'periodo' => $siguiente->periodo,
+                'lectura_actual' => $siguiente->lectura_actual,
+            ] : null,
         ]);
     }
 
     // 3. Guarda la nueva lectura (el consumo lo calcula el modelo)
     public function store(LecturaRequest $request)
     {
-        Lectura::create($request->validated());
+        Lectura::create($request->validated())->encadenarSiguiente();
 
         return redirect()->route('lecturas.index')->with('success', 'Lectura registrada ✓');
     }
@@ -95,7 +102,7 @@ class LecturaController extends Controller
     // 4. Formulario para editar
     public function edit(Lectura $lectura)
     {
-        $socios = User::all();
+        $socios = User::orderBy('name')->get();
 
         return view('lecturas.edit', compact('lectura', 'socios'));
     }
@@ -104,6 +111,7 @@ class LecturaController extends Controller
     public function update(LecturaRequest $request, Lectura $lectura)
     {
         $lectura->update($request->validated());
+        $lectura->encadenarSiguiente();
 
         return redirect()->route('lecturas.index')->with('success', 'Lectura actualizada ✓');
     }

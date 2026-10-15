@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Once;
 
 /**
  * Configuración clave/valor del sistema (tabla `ajustes`).
@@ -26,6 +27,9 @@ class Ajuste extends Model
     public static function guardar(string $clave, string $valor): void
     {
         static::updateOrCreate(['clave' => $clave], ['valor' => $valor]);
+
+        // tarifaM3() se memoriza con once(): que lo siguiente use el valor nuevo
+        Once::flush();
     }
 
     /**

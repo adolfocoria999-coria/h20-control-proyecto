@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrPagoController;
 use App\Http\Controllers\ReciboController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\TarifaAguaController;
 use App\Http\Controllers\TarifaMultaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,10 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     // Gestión de socios (la exportación va antes del resource)
     Route::get('/usuarios/exportar', [UserController::class, 'exportar'])->name('usuarios.exportar');
     Route::resource('usuarios', UserController::class)->except('show');
+
+    // Tarifa del agua por m³ (decisión de la directiva)
+    Route::get('/tarifa-agua', [TarifaAguaController::class, 'index'])->name('tarifa-agua.index');
+    Route::put('/tarifa-agua', [TarifaAguaController::class, 'update'])->name('tarifa-agua.update');
 
     // Historial: solo el superadministrador puede borrar registros
     Route::delete('/historial/periodo', [HistorialController::class, 'destroyPeriodo'])->name('historial.destroy-periodo');

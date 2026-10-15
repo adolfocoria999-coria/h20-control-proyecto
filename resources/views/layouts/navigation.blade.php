@@ -15,6 +15,9 @@
                         <x-nav-link :href="route('usuarios.index')" :active="request()->routeIs('usuarios.*')">
                             {{ __('Socios') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('tarifa-agua.index')" :active="request()->routeIs('tarifa-agua.*')">
+                            {{ __('Tarifa') }}
+                        </x-nav-link>
                     @endif
 
                     <!-- 2. VISTAS PARA SUPERADMIN Y ADMIN/HACIENDA (1 y 2) -->
@@ -105,6 +108,9 @@
             @if(Auth::user()->esSuperAdmin())
                 <x-responsive-nav-link :href="route('usuarios.index')" :active="request()->routeIs('usuarios.*')">
                     {{ __('Socios') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('tarifa-agua.index')" :active="request()->routeIs('tarifa-agua.*')">
+                    {{ __('Tarifa del agua') }}
                 </x-responsive-nav-link>
             @endif
 

@@ -123,6 +123,7 @@ class ReporteFinanciero
 
     private function sumarMontos(Collection $lecturas): float
     {
+        // Lo cobrado vale lo que se cobró; lo pendiente, consumo × la tarifa de cada lectura
         return (float) $lecturas->sum(fn (Lectura $l) => $l->monto);
     }
 }

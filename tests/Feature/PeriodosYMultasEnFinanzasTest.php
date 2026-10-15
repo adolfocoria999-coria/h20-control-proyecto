@@ -33,7 +33,7 @@ class PeriodosYMultasEnFinanzasTest extends TestCase
 
     public function test_no_se_puede_registrar_dos_lecturas_del_mismo_periodo(): void
     {
-        Lectura::factory()->for($this->socio, 'usuario')->create(['mes' => 3, 'gestion' => 2026]);
+        Lectura::factory()->for($this->socio, 'usuario')->create(['mes' => 3, 'gestion' => 2026, 'lectura_anterior' => 0, 'lectura_actual' => 10]);
 
         $this->actingAs($this->admin)->post('/lecturas', [
             'user_id' => $this->socio->id,
@@ -49,7 +49,8 @@ class PeriodosYMultasEnFinanzasTest extends TestCase
         foreach ([[4, 2026, $this->socio], [3, 2025, $this->socio], [3, 2026, User::factory()->create()]] as [$mes, $gestion, $socio]) {
             $this->actingAs($this->admin)->post('/lecturas', [
                 'user_id' => $socio->id, 'mes' => $mes, 'gestion' => $gestion,
-                'lectura_anterior' => 0, 'lectura_actual' => 1,
+                // La lectura anterior la completa el servidor con la del mes previo (si existe)
+                'lectura_anterior' => 0, 'lectura_actual' => $mes === 4 ? 15 : 1,
             ])->assertSessionHasNoErrors();
         }
     }

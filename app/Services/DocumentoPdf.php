@@ -16,7 +16,8 @@ class DocumentoPdf
         return Pdf::loadView($vista, $datos)
             ->setPaper('a4', $orientacion)
             // DejaVu Sans trae tildes, ñ y símbolos; nada se descarga de internet
-            ->setOption(['defaultFont' => 'DejaVu Sans', 'isRemoteEnabled' => false])
+            // Solo se incrustan las letras usadas: el PDF pesa decenas de KB y no cientos
+            ->setOption(['defaultFont' => 'DejaVu Sans', 'isRemoteEnabled' => false, 'isFontSubsettingEnabled' => true])
             ->download($nombreArchivo);
     }
 }

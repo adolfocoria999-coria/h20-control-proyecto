@@ -47,6 +47,7 @@ class Actividad extends Model
         'lecturas' => 'Lecturas',
         'multas' => 'Multas',
         'tarifas' => 'Tarifas de multas',
+        'tarifa_agua' => 'Tarifa del agua',
         'finanzas' => 'Finanzas',
         'qr' => 'QR de pago',
         'reportes' => 'Reportes',
