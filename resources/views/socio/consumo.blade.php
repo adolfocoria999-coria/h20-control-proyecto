@@ -44,6 +44,9 @@
                                 </td>
                                 <td data-label="Lectura Actual" class="px-6 py-4 whitespace-nowrap text-center text-blue-950 font-black">
                                     {{ $lectura->lectura_actual }} m³
+                                    @if($lectura->foto)
+                                        <a href="{{ route('lecturas.foto', $lectura) }}" target="_blank" class="block mt-1 text-xs font-extrabold text-blue-700 hover:underline">📷 Ver foto del medidor</a>
+                                    @endif
                                 </td>
                                 <td data-label="Tu Consumo" class="px-6 py-4 whitespace-nowrap text-center">
                                     <span class="px-2.5 py-1 text-xs font-extrabold rounded-lg bg-sky-100 text-blue-950 border border-sky-200">

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ArqueoController;
 use App\Http\Controllers\BalanceMensualController;
+use App\Http\Controllers\FotoMedidorController;
 use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\LecturaController;
 use App\Http\Controllers\MisPagosController;
@@ -52,6 +53,9 @@ Route::middleware(['auth', 'role:superadmin,admin,plomero'])->group(function () 
     // Carga rápida del mes: todos los socios en una planilla (el plomero la usa desde el celular)
     Route::get('/lecturas/planilla', [PlanillaLecturasController::class, 'index'])->name('lecturas.planilla');
     Route::post('/lecturas/planilla', [PlanillaLecturasController::class, 'store'])->name('lecturas.planilla.store');
+
+    // Foto del medidor (el plomero la toma en el recorrido)
+    Route::post('/lecturas/{lectura}/foto', [FotoMedidorController::class, 'store'])->name('lecturas.foto.store');
 });
 
 // ==========================================================
@@ -101,9 +105,9 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
 });
 
 // ==========================================================
-// CUALQUIER USUARIO AUTENTICADO
+// SOCIOS Y DIRECTIVA (el plomero solo usa la planilla de lecturas)
 // ==========================================================
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'role:superadmin,admin,socio'])->group(function () {
 
     // Vista del socio: solo sus propias lecturas
     Route::get('/mi-consumo', [LecturaController::class, 'miConsumo'])->name('socio.consumo');
@@ -123,10 +127,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/multas/exportar', [MultaController::class, 'exportar'])->name('multas.exportar');
     Route::get('/multas', [MultaController::class, 'index'])->name('multas.index');
 
+    // Foto del medidor: Hacienda cualquiera; el socio, la suya
+    Route::get('/lecturas/{lectura}/foto', [FotoMedidorController::class, 'show'])->name('lecturas.foto');
+
     // Recibos en PDF de pagos confirmados (el socio solo descarga los suyos)
     Route::get('/recibos/agua/{lectura}', [ReciboController::class, 'agua'])->name('recibos.agua');
     Route::get('/recibos/multa/{multa}', [ReciboController::class, 'multa'])->name('recibos.multa');
 
+});
+
+// ==========================================================
+// CUALQUIER USUARIO AUTENTICADO
+// ==========================================================
+Route::middleware('auth')->group(function () {
     // Perfil de Usuario
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

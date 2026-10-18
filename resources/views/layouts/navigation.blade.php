@@ -44,14 +44,16 @@
                         </x-nav-link>
                     @endif
 
-                    <!-- 4. VISTAS COMPARTIDAS (Finanzas, Multas y Sanciones) -->
-                    <x-nav-link :href="route('finanzas.index')" :active="request()->routeIs('finanzas.*')">
-                        {{ __('Finanzas') }}
-                    </x-nav-link>
+                    <!-- 4. VISTAS COMPARTIDAS (Finanzas, Multas y Sanciones): no para el plomero -->
+                    @unless(Auth::user()->esPlomero())
+                        <x-nav-link :href="route('finanzas.index')" :active="request()->routeIs('finanzas.*')">
+                            {{ __('Finanzas') }}
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('multas.index')" :active="request()->routeIs('multas.*')">
-                        {{ __('Multas y Sanciones') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('multas.index')" :active="request()->routeIs('multas.*')">
+                            {{ __('Multas y Sanciones') }}
+                        </x-nav-link>
+                    @endunless
 
                     <!-- 5. NUEVO MÓDULO DE REPORTES (Solo Admin/SuperAdmin) -->
                     @if(Auth::user()->esAdmin())
@@ -142,14 +144,16 @@
                 </x-responsive-nav-link>
             @endif
 
-            <!-- Finanzas y Multas para todos los usuarios -->
-            <x-responsive-nav-link :href="route('finanzas.index')" :active="request()->routeIs('finanzas.*')">
-                {{ __('Finanzas') }}
-            </x-responsive-nav-link>
+            <!-- Finanzas y Multas: todos menos el plomero -->
+            @unless(Auth::user()->esPlomero())
+                <x-responsive-nav-link :href="route('finanzas.index')" :active="request()->routeIs('finanzas.*')">
+                    {{ __('Finanzas') }}
+                </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('multas.index')" :active="request()->routeIs('multas.*')">
-                {{ __('Multas y Sanciones') }}
-            </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('multas.index')" :active="request()->routeIs('multas.*')">
+                    {{ __('Multas y Sanciones') }}
+                </x-responsive-nav-link>
+            @endunless
 
             <!-- Reportes para el menú móvil -->
             @if(Auth::user()->esAdmin())

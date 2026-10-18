@@ -11,6 +11,7 @@
                 
                 <form action="{{ route('lecturas.update', $lectura->id) }}" method="POST">
                     @csrf
+                    <x-mensajes-sesion class="mb-4" />
                     <x-errores-formulario />
                     @method('PUT')
 
@@ -76,6 +77,26 @@
                         </button>
                     </div>
                 </form>
+
+                {{-- Foto del medidor (formulario aparte: se sube al momento) --}}
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                    <h3 class="text-sm font-bold text-gray-700 mb-3">📷 Foto del medidor</h3>
+                    @if($lectura->foto)
+                        <a href="{{ route('lecturas.foto', $lectura) }}" target="_blank">
+                            <img src="{{ route('lecturas.foto', $lectura) }}" alt="Foto del medidor" class="w-48 h-48 object-cover rounded-xl border border-gray-200 shadow-sm mb-3">
+                        </a>
+                    @else
+                        <p class="text-xs text-gray-500 mb-3">Esta lectura no tiene foto.</p>
+                    @endif
+                    <form action="{{ route('lecturas.foto.store', $lectura) }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
+                        @csrf
+                        <input type="file" name="foto" accept="image/*" required class="text-sm">
+                        <button type="submit" style="background-color: #0369a1; color: white; padding: 8px 16px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer;">
+                            {{ $lectura->foto ? 'Reemplazar foto' : 'Subir foto' }}
+                        </button>
+                    </form>
+                    @error('foto')<p class="mt-1 text-xs font-bold text-red-600">{{ $message }}</p>@enderror
+                </div>
 
             </div>
         </div>

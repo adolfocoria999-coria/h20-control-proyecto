@@ -49,6 +49,7 @@ class PlanillaLecturasController extends Controller
         $nuevas = [];
         $errores = [];
         $yaRegistradas = []; // anotadas en el celular, pero alguien ya cargó ese mes
+        $ids = [];           // socio => lectura, para que el celular suba las fotos
 
         foreach ($this->filas($mes, $gestion) as $fila) {
             $dato = $entradas[$fila->socio->id] ?? [];
@@ -65,6 +66,7 @@ class PlanillaLecturasController extends Controller
             }
             if ($fila->registrada) {
                 $yaRegistradas[] = $fila->socio->name;
+                $ids[$fila->socio->id] = $fila->registrada->id;
 
                 continue;
             }
@@ -123,13 +125,15 @@ class PlanillaLecturasController extends Controller
 
             // Las enviadas desde el celular que ya estaban cargadas no son un error: se descartan
             return $request->expectsJson()
-                ? response()->json(['guardadas' => 0, 'mensaje' => $mensaje], $yaRegistradas ? 200 : 422)
+                ? response()->json(['guardadas' => 0, 'mensaje' => $mensaje, 'ids' => (object) $ids], $yaRegistradas ? 200 : 422)
                 : back()->withInput()->with('error', $mensaje);
         }
 
-        DB::transaction(function () use ($nuevas) {
+        DB::transaction(function () use ($nuevas, &$ids) {
             foreach ($nuevas as $datos) {
-                Lectura::create($datos)->encadenarSiguiente();
+                $lectura = Lectura::create($datos);
+                $lectura->encadenarSiguiente();
+                $ids[$lectura->user_id] = $lectura->id;
             }
         });
 
@@ -139,7 +143,7 @@ class PlanillaLecturasController extends Controller
         if ($request->expectsJson()) {
             session()->flash('success', $mensaje);
 
-            return response()->json(['guardadas' => count($nuevas), 'mensaje' => $mensaje]);
+            return response()->json(['guardadas' => count($nuevas), 'mensaje' => $mensaje, 'ids' => (object) $ids]);
         }
 
         return redirect()->route('lecturas.planilla', ['mes' => $mes, 'gestion' => $gestion])->with('success', $mensaje);
@@ -159,7 +163,7 @@ class PlanillaLecturasController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'ci', 'zona', 'orden_recorrido']);
 
-        $columnas = ['id', 'user_id', 'mes', 'gestion', 'lectura_anterior', 'lectura_actual', 'consumo', 'estado', 'observacion'];
+        $columnas = ['id', 'user_id', 'mes', 'gestion', 'lectura_anterior', 'lectura_actual', 'consumo', 'estado', 'observacion', 'foto'];
         $delPeriodo = Lectura::where(['mes' => $mes, 'gestion' => $gestion])->get($columnas)->keyBy('user_id');
         $previas = Lectura::whereRaw('(gestion * 12 + mes) < ?', [$orden])
             ->orderByDesc('gestion')->orderByDesc('mes')->get($columnas)->groupBy('user_id');

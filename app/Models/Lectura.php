@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Lectura extends Model
 {
@@ -32,7 +33,7 @@ class Lectura extends Model
     ];
 
     // Datos internos del cobro: el historial ya registra la acción de pago
-    protected array $ignorarEnHistorial = ['fecha_pago', 'monto_pagado', 'cobrado_por', 'tarifa_m3'];
+    protected array $ignorarEnHistorial = ['fecha_pago', 'monto_pagado', 'cobrado_por', 'tarifa_m3', 'foto'];
 
     protected function casts(): array
     {
@@ -73,7 +74,12 @@ class Lectura extends Model
 
         // Cualquier cambio en una lectura cobrada actualiza Finanzas (agua cobrada del mes)
         static::saved(fn (Lectura $lectura) => $lectura->actualizarFinanzas());
-        static::deleted(fn (Lectura $lectura) => $lectura->actualizarFinanzas());
+        static::deleted(function (Lectura $lectura) {
+            $lectura->actualizarFinanzas();
+            if ($lectura->foto) {
+                Storage::disk('archivos')->delete($lectura->foto);
+            }
+        });
     }
 
     /**

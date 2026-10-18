@@ -140,6 +140,9 @@
                                             <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
                                                 ✅ Registrada · {{ Lectura::m3($fila->registrada->consumo) }}
                                             </span>
+                                            @if($fila->registrada->foto)
+                                                <div class="mt-1 text-xs font-bold text-sky-800">📷 Con foto del medidor</div>
+                                            @endif
                                             @if($fila->registrada->observacion)
                                                 <div class="mt-1 text-xs font-bold text-amber-800">📝 {{ $fila->registrada->observacion }}</div>
                                             @endif
@@ -161,6 +164,14 @@
                                                    data-promedio="{{ $fila->promedio ?? '' }}"
                                                    data-max="{{ $fila->siguiente?->lectura_actual ?? '' }}"
                                                    class="actual {{ $input }} {{ $errorFila ? 'border-red-500' : 'border-sky-300' }}">
+                                            <div class="foto-medidor mt-2 flex items-center justify-end gap-2">
+                                                <img class="miniatura hidden w-12 h-12 object-cover rounded-lg border border-sky-300" alt="Foto del medidor">
+                                                <button type="button" class="quitar-foto hidden text-xs font-black text-red-700" title="Quitar foto">✕</button>
+                                                <label class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-sky-100 hover:bg-sky-200 text-blue-900 text-xs font-extrabold cursor-pointer border border-sky-200">
+                                                    📷 <span class="texto-foto">Foto</span>
+                                                    <input type="file" accept="image/*" capture="environment" class="entrada-foto sr-only">
+                                                </label>
+                                            </div>
                                         </td>
                                         <td data-label="Consumo · Monto" class="px-4 py-3 text-right">
                                             <span class="vista-previa text-xs font-bold text-sky-700">—</span>
@@ -222,7 +233,8 @@
                 actual.classList.remove('border-red-500', 'border-amber-500', 'bg-amber-50');
 
                 const observacion = fila.querySelector('input.observacion');
-                if (actual.value === '' && observacion && observacion.value.trim() !== '') {
+                const conFoto = fila.dataset.foto === '1';
+                if (actual.value === '' && ((observacion && observacion.value.trim() !== '') || conFoto)) {
                     actual.classList.add('border-red-500');
                     previa.textContent = '❌ Falta la lectura actual';
                     previa.className = 'vista-previa text-xs font-bold text-red-700';
@@ -378,17 +390,21 @@
                     return 'errores';
                 }
                 if (!respuesta.ok) return 'sin-senal';
+                const cuerpo = await respuesta.json().catch(() => ({}));
+                await asociarFotos(clave, cuerpo.ids || {});
                 localStorage.removeItem(clave);
                 return 'ok';
             }
 
             const pendientes = () => Object.keys(localStorage).filter(k => k.startsWith(prefijo) && leer(k)?.pendiente);
 
-            function mostrarPendientes(motivo = 'sin-senal') {
+            async function mostrarPendientes(motivo = 'sin-senal') {
                 const claves = pendientes();
-                if (!claves.length) return;
+                const fotos = (await fotosPorSubir()).length;
+                if (!claves.length && !fotos) return;
                 const cantidad = claves.reduce((n, k) => n + Object.values(leer(k).lecturas).filter(l => l.actual).length, 0);
-                const meses = claves.map(k => { const d = leer(k); return nombreMes[d.mes] + ' ' + d.gestion; }).join(', ');
+                const meses = (claves.map(k => { const d = leer(k); return nombreMes[d.mes] + ' ' + d.gestion; }).join(', ') || 'ya registradas')
+                    + (fotos ? ` · ${fotos} foto(s) por subir` : '');
                 if (motivo === 'sesion') {
                     avisar(`🔒 Tu sesión venció. Hay ${cantidad} lectura(s) guardadas en este celular (${meses}): ingresa de nuevo y se enviarán solas.`, 'error', { login: true });
                 } else {
@@ -399,7 +415,7 @@
             let enviando = false;
             async function enviarPendientes() {
                 const claves = pendientes();
-                if (enviando || !claves.length) return;
+                if (enviando || (!claves.length && !(await fotosPorSubir()).length)) return;
                 enviando = true;
                 avisar('⏳ Enviando las lecturas guardadas en el celular…', 'espera');
                 let resultado = 'ok';
@@ -407,6 +423,8 @@
                     resultado = await enviar(clave);
                     if (resultado !== 'ok') break;
                 }
+                // Después de las lecturas, las fotos (pueden quedar para más tarde si se corta la señal)
+                if (resultado === 'ok') resultado = await subirFotosPendientes();
                 enviando = false;
                 if (resultado === 'ok') { location.reload(); return; }
                 if (resultado !== 'errores') mostrarPendientes(resultado);
@@ -428,7 +446,127 @@
                 if (navigator.onLine) enviarPendientes(); else mostrarPendientes();
             });
 
-            // Al abrir con señal, envía lo que haya quedado pendiente
+
+            // ---------- Foto del medidor ----------
+            // Se comprime en el celular (máx. 1280 px, JPEG) y se guarda en IndexedDB
+            // (aguanta muchas fotos sin señal). Cuando la lectura se registra, se sube.
+            const almacen = (() => {
+                let base;
+                const abrir = () => base ??= new Promise((ok, mal) => {
+                    const pedido = indexedDB.open('h2o-control', 1);
+                    pedido.onupgradeneeded = () => pedido.result.createObjectStore('fotos');
+                    pedido.onsuccess = () => ok(pedido.result);
+                    pedido.onerror = () => mal(pedido.error);
+                });
+                const operar = async (modo, fn) => {
+                    const db = await abrir();
+                    return new Promise((ok, mal) => {
+                        const tx = db.transaction('fotos', modo);
+                        const pedido = fn(tx.objectStore('fotos'));
+                        tx.oncomplete = () => ok(pedido?.result);
+                        tx.onerror = () => mal(tx.error);
+                    });
+                };
+                return {
+                    poner: (clave, valor) => operar('readwrite', s => s.put(valor, clave)),
+                    quitar: (clave) => operar('readwrite', s => s.delete(clave)),
+                    todas: async () => {
+                        const db = await abrir();
+                        return new Promise((ok) => {
+                            const lista = [];
+                            const cursor = db.transaction('fotos').objectStore('fotos').openCursor();
+                            cursor.onsuccess = () => {
+                                const c = cursor.result;
+                                if (c) { if (String(c.key).startsWith(prefijo)) lista.push([c.key, c.value]); c.continue(); } else ok(lista);
+                            };
+                            cursor.onerror = () => ok(lista);
+                        });
+                    },
+                };
+            })();
+
+            async function comprimir(archivo) {
+                const imagen = await createImageBitmap(archivo, { imageOrientation: 'from-image' });
+                const escala = Math.min(1, 1280 / Math.max(imagen.width, imagen.height));
+                const lienzo = document.createElement('canvas');
+                lienzo.width = Math.round(imagen.width * escala);
+                lienzo.height = Math.round(imagen.height * escala);
+                lienzo.getContext('2d').drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
+                return new Promise(ok => lienzo.toBlob(ok, 'image/jpeg', 0.7));
+            }
+
+            function mostrarFoto(fila, blob) {
+                const mini = fila.querySelector('.miniatura');
+                if (mini.src) URL.revokeObjectURL(mini.src);
+                fila.dataset.foto = blob ? '1' : '';
+                mini.classList.toggle('hidden', !blob);
+                fila.querySelector('.quitar-foto').classList.toggle('hidden', !blob);
+                fila.querySelector('.texto-foto').textContent = blob ? 'Cambiar' : 'Foto';
+                if (blob) mini.src = URL.createObjectURL(blob);
+                else mini.removeAttribute('src');
+                resumen();
+            }
+
+            form.querySelectorAll('tr.fila').forEach(fila => {
+                const entrada = fila.querySelector('.entrada-foto');
+                if (!entrada) return;
+                const clave = claveActual + '|' + fila.dataset.id;
+                entrada.addEventListener('change', async () => {
+                    const archivo = entrada.files[0];
+                    entrada.value = '';
+                    if (!archivo) return;
+                    try {
+                        const blob = await comprimir(archivo);
+                        await almacen.poner(clave, { blob, socio: fila.dataset.id, lectura: null });
+                        mostrarFoto(fila, blob);
+                    } catch (error) {
+                        alert('No se pudo guardar la foto en el celular. Intenta de nuevo.');
+                    }
+                });
+                fila.querySelector('.quitar-foto').addEventListener('click', async () => {
+                    await almacen.quitar(clave);
+                    mostrarFoto(fila, null);
+                });
+            });
+
+            // Al abrir: muestra las fotos tomadas antes (sin señal o sin guardar)
+            almacen.todas().then(fotos => fotos.forEach(([clave, foto]) => {
+                if (!clave.startsWith(claveActual + '|') || foto.lectura) return;
+                const fila = form.querySelector(`tr.fila[data-id="${foto.socio}"]`);
+                if (fila && fila.querySelector('.entrada-foto')) mostrarFoto(fila, foto.blob);
+            })).catch(() => {});
+
+            // Las lecturas ya se registraron: cada foto sabe a qué lectura va
+            async function asociarFotos(clave, ids) {
+                for (const [claveFoto, foto] of await almacen.todas()) {
+                    if (!claveFoto.startsWith(clave + '|') || foto.lectura) continue;
+                    if (ids[foto.socio]) await almacen.poner(claveFoto, { ...foto, lectura: ids[foto.socio] });
+                    else await almacen.quitar(claveFoto); // su lectura no se envió: no hay a qué asociarla
+                }
+            }
+
+            const fotosPorSubir = async () => (await almacen.todas().catch(() => [])).filter(([, foto]) => foto.lectura);
+
+            // Sube las fotos ya asociadas. Devuelve 'ok', 'sin-senal' o 'sesion'.
+            async function subirFotosPendientes() {
+                for (const [clave, foto] of await fotosPorSubir()) {
+                    const datos = new FormData();
+                    datos.append('foto', foto.blob, 'medidor.jpg');
+                    let respuesta;
+                    try {
+                        respuesta = await fetch(`{{ url('/lecturas') }}/${foto.lectura}/foto`, {
+                            method: 'POST', credentials: 'same-origin',
+                            headers: { 'Accept': 'application/json', ...tokenCsrf() }, body: datos,
+                        });
+                    } catch { return 'sin-senal'; }
+                    if (respuesta.status === 419 || respuesta.status === 401 || respuesta.redirected) return 'sesion';
+                    if (!respuesta.ok && ![409, 404, 422].includes(respuesta.status)) return 'sin-senal';
+                    await almacen.quitar(clave); // subida, o ya tenía foto / la lectura no existe
+                }
+                return 'ok';
+            }
+
+            // Al abrir con señal, envía lo que haya quedado pendiente (lecturas y fotos)
             if (navigator.onLine) enviarPendientes(); else mostrarPendientes();
 
             // ---------- Instalar como app ----------

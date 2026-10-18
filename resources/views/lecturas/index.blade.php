@@ -156,6 +156,9 @@
                                 @if($lectura->observacion)
                                     <div class="mt-1 max-w-[14rem] whitespace-normal text-xs font-bold text-amber-800" title="Observación del recorrido">📝 {{ $lectura->observacion }}</div>
                                 @endif
+                                @if($lectura->foto)
+                                    <a href="{{ route('lecturas.foto', $lectura) }}" target="_blank" class="block mt-1 text-xs font-extrabold text-blue-700 hover:underline">📷 Ver foto</a>
+                                @endif
                             </td>
                             
                             <td data-label="Monto (Bs.)" class="px-3 py-4 font-extrabold text-emerald-600 whitespace-nowrap">
