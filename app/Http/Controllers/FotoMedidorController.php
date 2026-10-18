@@ -29,9 +29,15 @@ class FotoMedidorController extends Controller
             'foto.max' => 'La foto no puede pesar más de 4 MB.',
         ]);
 
-        // El plomero agrega la foto que falta; reemplazarla es tarea de Hacienda
-        if ($lectura->foto && ! $request->user()->esAdmin()) {
-            return $this->responder($request, 'Esta lectura ya tiene foto.', 409);
+        if (! $request->user()->esAdmin()) {
+            // La foto del plomero es el respaldo de una observación (fuga, medidor dañado...)
+            if (blank($lectura->observacion)) {
+                return $this->responder($request, 'La foto acompaña una observación: escribe primero qué observaste.', 422);
+            }
+            // Agrega la foto que falta; reemplazarla es tarea de Hacienda
+            if ($lectura->foto) {
+                return $this->responder($request, 'Esta lectura ya tiene foto.', 409);
+            }
         }
 
         $anterior = $lectura->foto;

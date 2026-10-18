@@ -43,7 +43,26 @@ class FotoMedidorTest extends TestCase
 
     private function lectura(User $socio): Lectura
     {
-        return Lectura::factory()->for($socio, 'usuario')->create(['mes' => 10, 'gestion' => 2026]);
+        return Lectura::factory()->for($socio, 'usuario')->create(['mes' => 10, 'gestion' => 2026, 'observacion' => 'Posible fuga']);
+    }
+
+    public function test_el_plomero_solo_sube_foto_si_hay_una_observacion(): void
+    {
+        $sinObservacion = Lectura::factory()->for($this->beto, 'usuario')->create(['mes' => 10, 'gestion' => 2026]);
+
+        $this->actingAs($this->plomero)->post("/lecturas/{$sinObservacion->id}/foto", ['foto' => $this->foto()], ['Accept' => 'application/json'])
+            ->assertStatus(422)
+            ->assertJson(['mensaje' => 'La foto acompaña una observación: escribe primero qué observaste.']);
+        $this->assertNull($sinObservacion->fresh()->foto);
+
+        // Hacienda puede adjuntarla igual desde el formulario de la lectura
+        $this->actingAs($this->admin)->post("/lecturas/{$sinObservacion->id}/foto", ['foto' => $this->foto()])->assertSessionHas('success');
+        $this->assertNotNull($sinObservacion->fresh()->foto);
+
+        // En la planilla el botón de foto va junto a la observación y empieza oculto
+        $this->actingAs($this->plomero)->get('/lecturas/planilla?mes=11&gestion=2026')
+            ->assertSee('<div class="foto-medidor hidden', false)
+            ->assertSee('Foto de lo observado');
     }
 
     public function test_el_plomero_no_ve_finanzas_ni_multas(): void

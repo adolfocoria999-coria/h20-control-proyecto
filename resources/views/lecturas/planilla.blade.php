@@ -54,18 +54,18 @@
             </div>
             <x-errores-formulario />
 
-            <div class="grid grid-cols-3 gap-3">
-                <div class="bg-white rounded-2xl p-4 shadow border-l-8 border-emerald-500">
-                    <p class="text-xs font-black uppercase text-sky-700">Registradas</p>
-                    <p class="text-2xl font-black text-emerald-700">{{ $registradas }} <span class="text-sm text-sky-700">de {{ $filas->count() }}</span></p>
+            <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                <div class="min-w-0 bg-white rounded-2xl px-2.5 py-3 sm:p-4 shadow border-l-4 sm:border-l-8 border-emerald-500">
+                    <p class="text-[0.65rem] sm:text-xs font-black uppercase tracking-tight sm:tracking-normal text-sky-700 truncate">Registradas</p>
+                    <p class="text-xl sm:text-2xl font-black text-emerald-700">{{ $registradas }} <span class="text-xs sm:text-sm text-sky-700">de {{ $filas->count() }}</span></p>
                 </div>
-                <div class="bg-white rounded-2xl p-4 shadow border-l-8 border-amber-500">
-                    <p class="text-xs font-black uppercase text-sky-700">Faltan</p>
-                    <p class="text-2xl font-black text-amber-600">{{ $pendientes }}</p>
+                <div class="min-w-0 bg-white rounded-2xl px-2.5 py-3 sm:p-4 shadow border-l-4 sm:border-l-8 border-amber-500">
+                    <p class="text-[0.65rem] sm:text-xs font-black uppercase tracking-tight sm:tracking-normal text-sky-700 truncate">Faltan</p>
+                    <p class="text-xl sm:text-2xl font-black text-amber-600">{{ $pendientes }}</p>
                 </div>
-                <div class="bg-white rounded-2xl p-4 shadow border-l-8 border-blue-600">
-                    <p class="text-xs font-black uppercase text-sky-700">Tarifa</p>
-                    <p class="text-2xl font-black text-blue-950">Bs. {{ number_format($tarifa, 2, ',', '.') }}<span class="text-sm text-sky-700">/m³</span></p>
+                <div class="min-w-0 bg-white rounded-2xl px-2.5 py-3 sm:p-4 shadow border-l-4 sm:border-l-8 border-blue-600">
+                    <p class="text-[0.65rem] sm:text-xs font-black uppercase tracking-tight sm:tracking-normal text-sky-700 truncate">Tarifa</p>
+                    <p class="text-base sm:text-2xl font-black text-blue-950 leading-tight">Bs.&nbsp;{{ number_format($tarifa, 2, ',', '.') }}<span class="block sm:inline text-xs sm:text-sm text-sky-700">por m³</span></p>
                 </div>
             </div>
 
@@ -164,20 +164,21 @@
                                                    data-promedio="{{ $fila->promedio ?? '' }}"
                                                    data-max="{{ $fila->siguiente?->lectura_actual ?? '' }}"
                                                    class="actual {{ $input }} {{ $errorFila ? 'border-red-500' : 'border-sky-300' }}">
-                                            <div class="foto-medidor mt-2 flex items-center justify-end gap-2">
-                                                <img class="miniatura hidden w-12 h-12 object-cover rounded-lg border border-sky-300" alt="Foto del medidor">
-                                                <button type="button" class="quitar-foto hidden text-xs font-black text-red-700" title="Quitar foto">✕</button>
-                                                <label class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-sky-100 hover:bg-sky-200 text-blue-900 text-xs font-extrabold cursor-pointer border border-sky-200">
-                                                    📷 <span class="texto-foto">Foto</span>
-                                                    <input type="file" accept="image/*" capture="environment" class="entrada-foto sr-only">
-                                                </label>
-                                            </div>
                                         </td>
                                         <td data-label="Consumo · Monto" class="px-4 py-3 text-right">
                                             <span class="vista-previa text-xs font-bold text-sky-700">—</span>
                                             <input type="text" name="lecturas[{{ $id }}][observacion]" maxlength="255" list="observaciones-comunes"
                                                    value="{{ old("lecturas.{$id}.observacion") }}" placeholder="📝 Observación (opcional)"
                                                    class="observacion mt-2 w-full sm:w-56 px-3 py-1.5 rounded-xl border border-sky-200 text-xs font-semibold text-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                            {{-- La foto acompaña a la observación (respaldo de lo observado): aparece al escribirla --}}
+                                            <div class="foto-medidor hidden mt-2 flex items-center justify-end gap-2">
+                                                <img class="miniatura hidden w-12 h-12 object-cover rounded-lg border border-sky-300" alt="Foto del medidor">
+                                                <button type="button" class="quitar-foto hidden text-xs font-black text-red-700" title="Quitar foto">✕</button>
+                                                <label class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-sky-100 hover:bg-sky-200 text-blue-900 text-xs font-extrabold cursor-pointer border border-sky-200">
+                                                    📷 <span class="texto-foto">Foto de lo observado</span>
+                                                    <input type="file" accept="image/*" capture="environment" class="entrada-foto sr-only">
+                                                </label>
+                                            </div>
                                         </td>
                                     @endif
                                 </tr>
@@ -240,6 +241,13 @@
                     previa.className = 'vista-previa text-xs font-bold text-red-700';
                     return { escrita: true, error: true };
                 }
+                if (conFoto && (!observacion || observacion.value.trim() === '')) {
+                    observacion?.classList.add('border-red-500');
+                    previa.textContent = '❌ Escribe la observación de la foto';
+                    previa.className = 'vista-previa text-xs font-bold text-red-700';
+                    return { escrita: true, error: true };
+                }
+                observacion?.classList.remove('border-red-500');
                 if (actual.value === '') { previa.textContent = '—'; previa.className = 'vista-previa text-xs font-bold text-sky-700'; return { escrita: false }; }
                 if (isNaN(anterior)) { previa.textContent = 'Falta la lectura inicial'; previa.className = 'vista-previa text-xs font-bold text-amber-700'; return { escrita: true, error: true }; }
 
@@ -501,15 +509,24 @@
                 fila.dataset.foto = blob ? '1' : '';
                 mini.classList.toggle('hidden', !blob);
                 fila.querySelector('.quitar-foto').classList.toggle('hidden', !blob);
-                fila.querySelector('.texto-foto').textContent = blob ? 'Cambiar' : 'Foto';
+                fila.querySelector('.texto-foto').textContent = blob ? 'Cambiar' : 'Foto de lo observado';
+                actualizarBotonFoto(fila);
                 if (blob) mini.src = URL.createObjectURL(blob);
                 else mini.removeAttribute('src');
                 resumen();
             }
 
+            function actualizarBotonFoto(fila) {
+                const observacion = fila.querySelector('input.observacion');
+                const caja = fila.querySelector('.foto-medidor');
+                if (caja) caja.classList.toggle('hidden', !(observacion?.value.trim() || fila.dataset.foto === '1'));
+            }
+
             form.querySelectorAll('tr.fila').forEach(fila => {
                 const entrada = fila.querySelector('.entrada-foto');
                 if (!entrada) return;
+                fila.querySelector('input.observacion')?.addEventListener('input', () => actualizarBotonFoto(fila));
+                actualizarBotonFoto(fila);
                 const clave = claveActual + '|' + fila.dataset.id;
                 entrada.addEventListener('change', async () => {
                     const archivo = entrada.files[0];
