@@ -11,6 +11,7 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @include('layouts._instalable')
     </head>
     <body class="font-sans antialiased bg-slate-50 text-slate-900">
         <div class="min-h-screen bg-gradient-to-tr from-blue-50/50 via-white to-sky-50/50">

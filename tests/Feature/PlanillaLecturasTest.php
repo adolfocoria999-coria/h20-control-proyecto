@@ -105,7 +105,7 @@ class PlanillaLecturasTest extends TestCase
         $this->lectura($this->ana, 10, 110, 118);
 
         $this->guardar([$this->ana->id => ['actual' => 999]])
-            ->assertSessionHas('error', 'No escribiste ninguna lectura nueva.');
+            ->assertSessionHas('error', 'Ya estaban registradas: Ana Quispe. No se cambió nada.');
         $this->assertEquals(118, Lectura::where(['user_id' => $this->ana->id, 'mes' => 10])->sole()->lectura_actual);
 
         $this->guardar([$this->beto->id => ['actual' => 'abc']])

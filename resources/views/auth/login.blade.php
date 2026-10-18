@@ -9,6 +9,7 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('layouts._instalable')
 </head>
 <body class="font-sans antialiased bg-gradient-to-br from-blue-900 via-blue-700 to-cyan-500 min-h-screen flex items-center justify-center p-4">
 

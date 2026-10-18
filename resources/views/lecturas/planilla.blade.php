@@ -38,6 +38,20 @@
             </div>
 
             <x-mensajes-sesion />
+
+            {{-- Estado del envío: lecturas guardadas en el celular sin señal, sesión vencida, etc. --}}
+            <div id="estado-envio" class="hidden p-4 rounded-r-xl border-l-4 shadow-md text-sm font-bold" role="status">
+                <span id="estado-texto"></span>
+                <button type="button" id="enviar-ahora" class="hidden ml-2 underline font-black">Enviar ahora</button>
+                <a id="ir-login" href="{{ route('login') }}" class="hidden ml-2 underline font-black">Ingresar de nuevo</a>
+            </div>
+
+            {{-- Instalar en el celular (Android/Chrome muestra el botón; en iPhone se explica cómo) --}}
+            <div id="instalar-app" class="hidden p-4 bg-white rounded-2xl shadow border border-sky-100 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                <p class="text-sm font-bold text-blue-950">📲 Instala H2O Control en tu celular: se abre como una app y funciona sin señal.</p>
+                <button type="button" id="instalar" class="hidden bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-xl font-extrabold text-sm shadow">Instalar</button>
+                <p id="instalar-iphone" class="hidden text-xs font-bold text-sky-800">En iPhone: toca Compartir ⬆️ y luego "Agregar a inicio".</p>
+            </div>
             <x-errores-formulario />
 
             <div class="grid grid-cols-3 gap-3">
@@ -101,7 +115,7 @@
                                     $id = $fila->socio->id;
                                     $errorFila = $errors->first("lecturas.{$id}.actual") ?: $errors->first("lecturas.{$id}.anterior");
                                 @endphp
-                                <tr class="fila {{ $fila->registrada ? 'bg-emerald-50/60' : '' }} {{ $errorFila ? 'bg-red-50' : '' }}"
+                                <tr class="fila {{ $fila->registrada ? 'bg-emerald-50/60' : '' }} {{ $errorFila ? 'bg-red-50' : '' }}" data-id="{{ $id }}"
                                     data-buscar="{{ mb_strtolower($fila->socio->name.' '.$fila->socio->ci) }}"
                                     data-zona="{{ $fila->socio->zona ?? '__sin' }}"
                                     data-registrada="{{ $fila->registrada ? 1 : 0 }}">
@@ -111,9 +125,7 @@
                                             @if($fila->socio->orden_recorrido)<span class="font-black">N.º {{ $fila->socio->orden_recorrido }}</span> · @endif
                                             C.I. {{ $fila->socio->ci ?? 'S/N' }}
                                         </div>
-                                        @if($errorFila)
-                                            <div class="mt-1 text-xs font-bold text-red-700">{{ $errorFila }}</div>
-                                        @endif
+                                        <div class="error-fila mt-1 text-xs font-bold text-red-700 {{ $errorFila ? '' : 'hidden' }}">{{ $errorFila }}</div>
                                     </td>
 
                                     @if($fila->registrada)
@@ -254,13 +266,173 @@
                 if (siguiente) siguiente.focus(); else campo.blur();
             }));
 
-            document.getElementById('planilla').addEventListener('submit', e => {
+            // ---------- Guardado en el celular y envío (funciona sin señal) ----------
+            // Lo escrito se guarda en el celular a cada tecla. Al guardar sin señal queda
+            // "pendiente" y se envía solo cuando vuelve la conexión (o al volver a ingresar).
+            const form = document.getElementById('planilla');
+            const prefijo = 'h2o-planilla:{{ auth()->id() }}:';
+            const claveActual = prefijo + '{{ $gestion }}-{{ $mes }}';
+            const nombreMes = @json(\App\Support\Meses::NOMBRES);
+
+            const leer = (clave) => { try { return JSON.parse(localStorage.getItem(clave)) || null; } catch { return null; } };
+            const escribir = (clave, valor) => { try { localStorage.setItem(clave, JSON.stringify(valor)); } catch {} };
+
+            function datosDelFormulario() {
+                const lecturas = {};
+                form.querySelectorAll('input[name^="lecturas["]').forEach(campo => {
+                    const [, id, tipo] = campo.name.match(/lecturas\[(\d+)\]\[(\w+)\]/);
+                    if (campo.value === '') return;
+                    (lecturas[id] ??= {})[tipo] = campo.value;
+                });
+                return lecturas;
+            }
+
+            function guardarBorrador(pendiente = null) {
+                const anterior = leer(claveActual);
+                const lecturas = datosDelFormulario();
+                if (!Object.keys(lecturas).length && !anterior?.pendiente) { localStorage.removeItem(claveActual); return; }
+                escribir(claveActual, {
+                    mes: {{ $mes }}, gestion: {{ $gestion }}, lecturas,
+                    pendiente: pendiente ?? anterior?.pendiente ?? false,
+                    actualizado: new Date().toISOString(),
+                });
+            }
+
+            // Al abrir: recupera lo escrito antes (si no vino ya del servidor)
+            const borrador = leer(claveActual);
+            if (borrador) {
+                Object.entries(borrador.lecturas).forEach(([id, valores]) => Object.entries(valores).forEach(([tipo, valor]) => {
+                    const campo = form.querySelector(`input[name="lecturas[${id}][${tipo}]"]`);
+                    if (campo && campo.value === '') campo.value = valor;
+                }));
+                resumen();
+            }
+            form.addEventListener('input', () => guardarBorrador());
+
+            const estado = document.getElementById('estado-envio');
+            function avisar(texto, tipo, { reintentar = false, login = false } = {}) {
+                const colores = { espera: 'bg-amber-50 border-amber-500 text-amber-900', error: 'bg-red-50 border-red-500 text-red-900' };
+                estado.className = 'p-4 rounded-r-xl border-l-4 shadow-md text-sm font-bold ' + colores[tipo];
+                document.getElementById('estado-texto').textContent = texto;
+                document.getElementById('enviar-ahora').classList.toggle('hidden', !reintentar);
+                document.getElementById('ir-login').classList.toggle('hidden', !login);
+            }
+
+            function tokenCsrf() {
+                const cookie = document.cookie.split('; ').find(c => c.startsWith('XSRF-TOKEN='));
+                return cookie ? { 'X-XSRF-TOKEN': decodeURIComponent(cookie.split('=')[1]) }
+                    : { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content };
+            }
+
+            function mostrarErrores(errores) {
+                form.querySelectorAll('.error-fila').forEach(e => { e.textContent = ''; e.classList.add('hidden'); });
+                Object.entries(errores).forEach(([clave, mensaje]) => {
+                    const id = clave.split('.')[1];
+                    const div = form.querySelector(`tr[data-id="${id}"] .error-fila`);
+                    if (div) { div.textContent = mensaje; div.classList.remove('hidden'); }
+                });
+            }
+
+            // Envía un borrador al servidor. Devuelve 'ok', 'sin-senal', 'sesion' o 'errores'.
+            async function enviar(clave) {
+                const datos = leer(clave);
+                if (!datos || !Object.keys(datos.lecturas).length) { localStorage.removeItem(clave); return 'ok'; }
+                let respuesta;
+                try {
+                    respuesta = await fetch(form.action, {
+                        method: 'POST', credentials: 'same-origin',
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', ...tokenCsrf() },
+                        body: JSON.stringify({ mes: datos.mes, gestion: datos.gestion, lecturas: datos.lecturas }),
+                    });
+                } catch { return 'sin-senal'; }
+
+                // Sesión vencida: el servidor pide volver a ingresar (o redirige al login)
+                if (respuesta.status === 419 || respuesta.status === 401 || respuesta.redirected) return 'sesion';
+                if (respuesta.status === 422) {
+                    const cuerpo = await respuesta.json().catch(() => ({}));
+                    escribir(clave, { ...datos, pendiente: false });
+                    if (clave === claveActual && cuerpo.errores) mostrarErrores(cuerpo.errores);
+                    avisar(cuerpo.errores
+                        ? 'Hay lecturas con errores (en rojo). Corrígelas y vuelve a guardar.'
+                        : (cuerpo.mensaje || 'No se pudo guardar.'), 'error');
+                    return 'errores';
+                }
+                if (!respuesta.ok) return 'sin-senal';
+                localStorage.removeItem(clave);
+                return 'ok';
+            }
+
+            const pendientes = () => Object.keys(localStorage).filter(k => k.startsWith(prefijo) && leer(k)?.pendiente);
+
+            function mostrarPendientes(motivo = 'sin-senal') {
+                const claves = pendientes();
+                if (!claves.length) return;
+                const cantidad = claves.reduce((n, k) => n + Object.values(leer(k).lecturas).filter(l => l.actual).length, 0);
+                const meses = claves.map(k => { const d = leer(k); return nombreMes[d.mes] + ' ' + d.gestion; }).join(', ');
+                if (motivo === 'sesion') {
+                    avisar(`🔒 Tu sesión venció. Hay ${cantidad} lectura(s) guardadas en este celular (${meses}): ingresa de nuevo y se enviarán solas.`, 'error', { login: true });
+                } else {
+                    avisar(`📶 Sin señal: ${cantidad} lectura(s) guardadas en este celular (${meses}). Se enviarán solas cuando vuelva la señal.`, 'espera', { reintentar: true });
+                }
+            }
+
+            let enviando = false;
+            async function enviarPendientes() {
+                const claves = pendientes();
+                if (enviando || !claves.length) return;
+                enviando = true;
+                avisar('⏳ Enviando las lecturas guardadas en el celular…', 'espera');
+                let resultado = 'ok';
+                for (const clave of claves) {
+                    resultado = await enviar(clave);
+                    if (resultado !== 'ok') break;
+                }
+                enviando = false;
+                if (resultado === 'ok') { location.reload(); return; }
+                if (resultado !== 'errores') mostrarPendientes(resultado);
+            }
+
+            document.getElementById('enviar-ahora').addEventListener('click', enviarPendientes);
+            window.addEventListener('online', enviarPendientes);
+            window.addEventListener('offline', () => mostrarPendientes());
+
+            form.addEventListener('submit', e => {
+                e.preventDefault();
                 const r = resumen();
-                if (r.cantidad === 0) { e.preventDefault(); alert('No escribiste ninguna lectura.'); return; }
-                if (r.errores.length) { e.preventDefault(); r.errores[0].querySelector('input.actual, input.anterior')?.focus(); alert('Hay lecturas con errores (marcadas en rojo). Corrígelas antes de guardar.'); return; }
+                if (r.cantidad === 0) { alert('No escribiste ninguna lectura.'); return; }
+                if (r.errores.length) { r.errores[0].querySelector('input.actual, input.anterior')?.focus(); alert('Hay lecturas con errores (marcadas en rojo). Corrígelas antes de guardar.'); return; }
                 const aviso = r.anormales.length ? '\n\n⚠️ Consumo muy alto en: ' + r.anormales.join(', ') + '.' : '';
-                if (!confirm('¿Guardar ' + r.cantidad + ' lectura(s)?' + aviso)) e.preventDefault();
+                if (!confirm('¿Guardar ' + r.cantidad + ' lectura(s)?' + aviso)) return;
+
+                guardarBorrador(true);
+                if (navigator.onLine) enviarPendientes(); else mostrarPendientes();
             });
+
+            // Al abrir con señal, envía lo que haya quedado pendiente
+            if (navigator.onLine) enviarPendientes(); else mostrarPendientes();
+
+            // ---------- Instalar como app ----------
+            const enApp = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+            let pedidoInstalar = null;
+            window.addEventListener('beforeinstallprompt', e => {
+                e.preventDefault();
+                pedidoInstalar = e;
+                if (!enApp) {
+                    document.getElementById('instalar-app').classList.remove('hidden');
+                    document.getElementById('instalar').classList.remove('hidden');
+                }
+            });
+            document.getElementById('instalar').addEventListener('click', async () => {
+                if (!pedidoInstalar) return;
+                pedidoInstalar.prompt();
+                await pedidoInstalar.userChoice;
+                pedidoInstalar = null;
+                document.getElementById('instalar-app').classList.add('hidden');
+            });
+            if (!enApp && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
+                document.getElementById('instalar-app').classList.remove('hidden');
+                document.getElementById('instalar-iphone').classList.remove('hidden');
+            }
 
             // Búsqueda y "solo los que faltan"
             const buscar = document.getElementById('buscar');

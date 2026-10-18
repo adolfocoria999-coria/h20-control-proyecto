@@ -48,13 +48,19 @@ class PlanillaLecturasController extends Controller
 
         $nuevas = [];
         $errores = [];
+        $yaRegistradas = []; // anotadas en el celular, pero alguien ya cargó ese mes
 
         foreach ($this->filas($mes, $gestion) as $fila) {
             $dato = $entradas[$fila->socio->id] ?? [];
             $actual = trim((string) ($dato['actual'] ?? ''));
 
             // Fila vacía o mes ya registrado para ese socio: no se toca
-            if ($actual === '' || $fila->registrada) {
+            if ($actual === '') {
+                continue;
+            }
+            if ($fila->registrada) {
+                $yaRegistradas[] = $fila->socio->name;
+
                 continue;
             }
 
@@ -94,11 +100,20 @@ class PlanillaLecturasController extends Controller
 
         // Todo o nada: si una fila tiene error no se guarda ninguna y se conserva lo escrito
         if ($errores) {
-            return back()->withErrors($errores)->withInput();
+            return $request->expectsJson()
+                ? response()->json(['errores' => $errores], 422)
+                : back()->withErrors($errores)->withInput();
         }
 
         if (! $nuevas) {
-            return back()->withInput()->with('error', 'No escribiste ninguna lectura nueva.');
+            $mensaje = $yaRegistradas
+                ? 'Ya estaban registradas: '.implode(', ', $yaRegistradas).'. No se cambió nada.'
+                : 'No escribiste ninguna lectura nueva.';
+
+            // Las enviadas desde el celular que ya estaban cargadas no son un error: se descartan
+            return $request->expectsJson()
+                ? response()->json(['guardadas' => 0, 'mensaje' => $mensaje], $yaRegistradas ? 200 : 422)
+                : back()->withInput()->with('error', $mensaje);
         }
 
         DB::transaction(function () use ($nuevas) {
@@ -107,8 +122,16 @@ class PlanillaLecturasController extends Controller
             }
         });
 
-        return redirect()->route('lecturas.planilla', ['mes' => $mes, 'gestion' => $gestion])
-            ->with('success', count($nuevas).' lectura(s) de '.$periodo.' registrada(s) ✓');
+        $mensaje = count($nuevas).' lectura(s) de '.$periodo.' registrada(s) ✓'
+            .($yaRegistradas ? ' Ya estaban registradas (no se cambiaron): '.implode(', ', $yaRegistradas).'.' : '');
+
+        if ($request->expectsJson()) {
+            session()->flash('success', $mensaje);
+
+            return response()->json(['guardadas' => count($nuevas), 'mensaje' => $mensaje]);
+        }
+
+        return redirect()->route('lecturas.planilla', ['mes' => $mes, 'gestion' => $gestion])->with('success', $mensaje);
     }
 
     /**

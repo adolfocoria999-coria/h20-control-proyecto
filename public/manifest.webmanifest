@@ -1,0 +1,17 @@
+{
+    "name": "H2O Control",
+    "short_name": "H2O Control",
+    "description": "Servicio de agua potable de la OTB: lecturas, cobros y finanzas.",
+    "lang": "es",
+    "start_url": "/dashboard",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#e0f2fe",
+    "theme_color": "#1e40af",
+    "icons": [
+        { "src": "/iconos/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/iconos/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/iconos/icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}
