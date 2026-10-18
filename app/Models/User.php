@@ -113,9 +113,9 @@ class User extends Authenticatable
     }
 
     // Recorre los medidores y anota las lecturas (solo la planilla de carga)
-    public function esTecnico(): bool
+    public function esPlomero(): bool
     {
-        return $this->rolUsuario() === RolUsuario::Tecnico;
+        return $this->rolUsuario() === RolUsuario::Plomero;
     }
 
     /**
@@ -126,7 +126,7 @@ class User extends Authenticatable
         return match (true) {
             $this->esSuperAdmin() => route('usuarios.index'),
             $this->esAdmin() => route('lecturas.index'),
-            $this->esTecnico() => route('lecturas.planilla'),
+            $this->esPlomero() => route('lecturas.planilla'),
             default => route('socio.consumo'),
         };
     }

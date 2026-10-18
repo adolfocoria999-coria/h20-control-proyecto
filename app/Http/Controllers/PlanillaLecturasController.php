@@ -53,9 +53,14 @@ class PlanillaLecturasController extends Controller
         foreach ($this->filas($mes, $gestion) as $fila) {
             $dato = $entradas[$fila->socio->id] ?? [];
             $actual = trim((string) ($dato['actual'] ?? ''));
+            $observacion = trim(preg_replace('/\s+/', ' ', (string) ($dato['observacion'] ?? '')));
 
             // Fila vacía o mes ya registrado para ese socio: no se toca
             if ($actual === '') {
+                if ($observacion !== '' && ! $fila->registrada) {
+                    $errores["lecturas.{$fila->socio->id}.actual"] = "{$fila->socio->name}: anota también la lectura del medidor; la observación se guarda junto con ella.";
+                }
+
                 continue;
             }
             if ($fila->registrada) {
@@ -83,6 +88,11 @@ class PlanillaLecturasController extends Controller
 
                 continue;
             }
+            if (mb_strlen($observacion) > 255) {
+                $errores["{$clave}.observacion"] = "{$nombre}: la observación no puede tener más de 255 caracteres.";
+
+                continue;
+            }
             if ($error = Lectura::errorConSiguiente($fila->siguiente, (float) $actual)) {
                 $errores["{$clave}.actual"] = "{$nombre}: {$error}";
 
@@ -95,6 +105,7 @@ class PlanillaLecturasController extends Controller
                 'gestion' => $gestion,
                 'lectura_anterior' => (float) $anterior,
                 'lectura_actual' => (float) $actual,
+                'observacion' => $observacion !== '' ? $observacion : null,
             ];
         }
 
@@ -143,12 +154,12 @@ class PlanillaLecturasController extends Controller
     private function filas(int $mes, int $gestion): Collection
     {
         $orden = $gestion * 12 + $mes;
-        // En el orden del recorrido del técnico: zona y n.º de orden (los que no tienen, al final)
+        // En el orden del recorrido del plomero: zona y n.º de orden (los que no tienen, al final)
         $socios = User::orderByRaw('zona is null, zona, orden_recorrido is null, orden_recorrido')
             ->orderBy('name')
             ->get(['id', 'name', 'ci', 'zona', 'orden_recorrido']);
 
-        $columnas = ['id', 'user_id', 'mes', 'gestion', 'lectura_anterior', 'lectura_actual', 'consumo', 'estado'];
+        $columnas = ['id', 'user_id', 'mes', 'gestion', 'lectura_anterior', 'lectura_actual', 'consumo', 'estado', 'observacion'];
         $delPeriodo = Lectura::where(['mes' => $mes, 'gestion' => $gestion])->get($columnas)->keyBy('user_id');
         $previas = Lectura::whereRaw('(gestion * 12 + mes) < ?', [$orden])
             ->orderByDesc('gestion')->orderByDesc('mes')->get($columnas)->groupBy('user_id');

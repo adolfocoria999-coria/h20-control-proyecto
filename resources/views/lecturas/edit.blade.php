@@ -61,6 +61,12 @@
                         </div>
                     </div>
 
+                    <div class="mb-4">
+                        <label for="observacion" class="block text-sm font-medium text-gray-700 mb-2">Observación (opcional)</label>
+                        <input type="text" name="observacion" id="observacion" maxlength="255" value="{{ old('observacion', $lectura->observacion) }}"
+                               placeholder="Ej.: Medidor dañado, posible fuga…" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
+                    </div>
+
                     <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px;">
                         <a href="{{ route('lecturas.index') }}" style="background-color: #6b7280; color: white; padding: 10px 20px; border-radius: 6px; font-weight: bold; text-decoration: none;">
                             Cancelar

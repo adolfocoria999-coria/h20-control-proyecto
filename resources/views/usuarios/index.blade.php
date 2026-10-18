@@ -137,7 +137,7 @@
                                             $badgeClasses = 'bg-blue-800 text-white font-black shadow-md shadow-blue-500/20';
                                         } elseif (str_contains(strtolower($rolNombre), 'admin')) {
                                             $badgeClasses = 'bg-sky-600 text-white font-black shadow-md shadow-sky-500/20';
-                                        } elseif ($user->esTecnico()) {
+                                        } elseif ($user->esPlomero()) {
                                             $badgeClasses = 'bg-amber-100 text-amber-800 border-amber-200 font-black';
                                         } else {
                                             $badgeClasses = 'bg-sky-100 text-blue-800 border-sky-200 font-bold';

@@ -113,7 +113,7 @@
                                 @endif
                                 @php
                                     $id = $fila->socio->id;
-                                    $errorFila = $errors->first("lecturas.{$id}.actual") ?: $errors->first("lecturas.{$id}.anterior");
+                                    $errorFila = $errors->first("lecturas.{$id}.actual") ?: $errors->first("lecturas.{$id}.anterior") ?: $errors->first("lecturas.{$id}.observacion");
                                 @endphp
                                 <tr class="fila {{ $fila->registrada ? 'bg-emerald-50/60' : '' }} {{ $errorFila ? 'bg-red-50' : '' }}" data-id="{{ $id }}"
                                     data-buscar="{{ mb_strtolower($fila->socio->name.' '.$fila->socio->ci) }}"
@@ -140,6 +140,9 @@
                                             <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
                                                 ✅ Registrada · {{ Lectura::m3($fila->registrada->consumo) }}
                                             </span>
+                                            @if($fila->registrada->observacion)
+                                                <div class="mt-1 text-xs font-bold text-amber-800">📝 {{ $fila->registrada->observacion }}</div>
+                                            @endif
                                         </td>
                                     @else
                                         <td data-label="Lectura anterior" class="px-4 py-3 text-right">
@@ -161,13 +164,23 @@
                                         </td>
                                         <td data-label="Consumo · Monto" class="px-4 py-3 text-right">
                                             <span class="vista-previa text-xs font-bold text-sky-700">—</span>
+                                            <input type="text" name="lecturas[{{ $id }}][observacion]" maxlength="255" list="observaciones-comunes"
+                                                   value="{{ old("lecturas.{$id}.observacion") }}" placeholder="📝 Observación (opcional)"
+                                                   class="observacion mt-2 w-full sm:w-56 px-3 py-1.5 rounded-xl border border-sky-200 text-xs font-semibold text-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                                         </td>
                                     @endif
                                 </tr>
                             @empty
                                 <tr><td colspan="4" class="px-6 py-10 text-center font-bold text-sky-700">No hay socios registrados.</td></tr>
                             @endforelse
-                            <tr id="sin-coincidencias" class="hidden">
+                            {{-- Sugerencias para la observación (el plomero puede escribir otra cosa) --}}
+                            <datalist id="observaciones-comunes">
+                                @foreach(['Medidor dañado', 'Medidor empañado o no se ve bien', 'Posible fuga', 'Medidor cambiado', 'Conexión sin medidor', 'Lectura tomada con dificultad (acceso cerrado)'] as $sugerencia)
+                                    <option value="{{ $sugerencia }}"></option>
+                                @endforeach
+                            </datalist>
+                            {{-- Se oculta con style (no con .hidden): en el celular .tabla-responsiva tr fuerza display:block --}}
+                            <tr id="sin-coincidencias" style="display: none">
                                 <td colspan="4" class="px-6 py-8 text-center font-bold text-sky-700">Ningún socio coincide con la búsqueda.</td>
                             </tr>
                         </tbody>
@@ -208,6 +221,13 @@
                 const valor = parseFloat(actual.value);
                 actual.classList.remove('border-red-500', 'border-amber-500', 'bg-amber-50');
 
+                const observacion = fila.querySelector('input.observacion');
+                if (actual.value === '' && observacion && observacion.value.trim() !== '') {
+                    actual.classList.add('border-red-500');
+                    previa.textContent = '❌ Falta la lectura actual';
+                    previa.className = 'vista-previa text-xs font-bold text-red-700';
+                    return { escrita: true, error: true };
+                }
                 if (actual.value === '') { previa.textContent = '—'; previa.className = 'vista-previa text-xs font-bold text-sky-700'; return { escrita: false }; }
                 if (isNaN(anterior)) { previa.textContent = 'Falta la lectura inicial'; previa.className = 'vista-previa text-xs font-bold text-amber-700'; return { escrita: true, error: true }; }
 
@@ -453,7 +473,7 @@
                 });
                 // El título de cada zona solo se muestra si tiene socios visibles
                 encabezados.forEach(e => e.style.display = zonasVisibles.has(e.dataset.zona) ? '' : 'none');
-                document.getElementById('sin-coincidencias').classList.toggle('hidden', visibles > 0 || filas.length === 0);
+                document.getElementById('sin-coincidencias').style.display = (visibles > 0 || filas.length === 0) ? 'none' : '';
             }
             buscar.addEventListener('input', filtrar);
             soloFaltan.addEventListener('change', filtrar);

@@ -26,6 +26,7 @@ class Lectura extends Model
         'lectura_anterior',
         'lectura_actual',
         'consumo',
+        'observacion',
         'estado',
         'metodo_pago',
     ];

@@ -56,7 +56,7 @@
 
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
     <div>
-        <label for="zona" class="block text-gray-700 text-sm font-bold mb-2">Zona / Calle <span class="font-semibold text-gray-500">(recorrido del técnico)</span></label>
+        <label for="zona" class="block text-gray-700 text-sm font-bold mb-2">Zona / Calle <span class="font-semibold text-gray-500">(recorrido del plomero)</span></label>
         <input type="text" id="zona" name="zona" value="{{ old('zona', $usuario?->zona) }}" maxlength="60" list="zonas-existentes"
                class="{{ $clase }}{{ $claseError('zona') }}" autocomplete="off" placeholder="Ej.: Zona Norte, Calle 3">
         <datalist id="zonas-existentes">
@@ -70,7 +70,7 @@
         <label for="orden_recorrido" class="block text-gray-700 text-sm font-bold mb-2">N.º de orden en el recorrido</label>
         <input type="number" id="orden_recorrido" name="orden_recorrido" value="{{ old('orden_recorrido', $usuario?->orden_recorrido) }}"
                min="1" max="9999" inputmode="numeric" class="{{ $clase }}{{ $claseError('orden_recorrido') }}" placeholder="Ej.: 12">
-        <p class="mt-1 text-xs text-gray-500">La planilla del técnico se ordena por zona y por este número.</p>
+        <p class="mt-1 text-xs text-gray-500">La planilla del plomero se ordena por zona y por este número.</p>
         <x-input-error :messages="$errors->get('orden_recorrido')" class="mt-1 text-xs" />
     </div>
 </div>

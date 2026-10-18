@@ -60,6 +60,8 @@ class LecturaRequest extends FormRequest
             'gestion' => 'required|integer|min:2000|max:2100',
             'lectura_anterior' => 'required|numeric|min:0',
             'lectura_actual' => ['required', 'numeric', 'gte:lectura_anterior', $this->noSuperaElMesSiguiente(...)],
+            // Lo que anotó el plomero o Hacienda (medidor dañado, posible fuga, etc.)
+            'observacion' => ['nullable', 'string', 'max:255'],
         ];
     }
 

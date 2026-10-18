@@ -17,7 +17,7 @@ class AppSinSenalTest extends TestCase
 {
     use RefreshDatabase;
 
-    private User $tecnico;
+    private User $plomero;
 
     private User $ana;
 
@@ -27,7 +27,7 @@ class AppSinSenalTest extends TestCase
     {
         parent::setUp();
         $this->seed(RolSeeder::class);
-        $this->tecnico = User::factory()->create(['rol_id' => RolUsuario::Tecnico->value]);
+        $this->plomero = User::factory()->create(['rol_id' => RolUsuario::Plomero->value]);
         $this->ana = User::factory()->create(['rol_id' => RolUsuario::Socio->value, 'name' => 'Ana Quispe']);
         $this->beto = User::factory()->create(['rol_id' => RolUsuario::Socio->value, 'name' => 'Beto Mamani']);
         foreach ([[$this->ana, 110], [$this->beto, 520]] as [$socio, $actual]) {
@@ -38,7 +38,7 @@ class AppSinSenalTest extends TestCase
 
     private function enviarDesdeElCelular(array $lecturas, int $mes = 10)
     {
-        return $this->actingAs($this->tecnico)
+        return $this->actingAs($this->plomero)
             ->postJson('/lecturas/planilla', ['mes' => $mes, 'gestion' => 2026, 'lecturas' => $lecturas]);
     }
 
@@ -54,15 +54,15 @@ class AppSinSenalTest extends TestCase
         $this->assertStringContainsString("'/lecturas/planilla'", file_get_contents(public_path('sw.js')));
 
         foreach (['/login', '/lecturas/planilla'] as $url) {
-            $respuesta = $url === '/login' ? $this->get($url) : $this->actingAs($this->tecnico)->get($url);
+            $respuesta = $url === '/login' ? $this->get($url) : $this->actingAs($this->plomero)->get($url);
             $respuesta->assertSee('manifest.webmanifest')->assertSee('sw.js');
         }
     }
 
     public function test_la_planilla_trae_el_guardado_en_el_celular_y_el_boton_instalar(): void
     {
-        $this->actingAs($this->tecnico)->get('/lecturas/planilla?mes=10&gestion=2026')
-            ->assertSee("'h2o-planilla:{$this->tecnico->id}:'", false)
+        $this->actingAs($this->plomero)->get('/lecturas/planilla?mes=10&gestion=2026')
+            ->assertSee("'h2o-planilla:{$this->plomero->id}:'", false)
             ->assertSee('id="estado-envio"', false)
             ->assertSee('Instala H2O Control en tu celular')
             ->assertSee('data-id="'.$this->ana->id.'"', false);

@@ -18,7 +18,7 @@ class RolSeeder extends Seeder
             RolUsuario::SuperAdmin->value => ['Superadministrador', 'Presidente de la OTB. Gestiona usuarios, roles y supervisa el sistema.'],
             RolUsuario::Admin->value => ['Administrador', 'Secretario de Hacienda. Registra pagos, consumos, socios y emite recibos.'],
             RolUsuario::Socio->value => ['Socio Común', 'Consulta historial de pagos, deudas pendientes y comprobantes.'],
-            RolUsuario::Tecnico->value => ['Técnico', 'Recorre los medidores y anota las lecturas desde su celular.'],
+            RolUsuario::Plomero->value => ['Plomero', 'Recorre los medidores y anota las lecturas desde su celular.'],
         ];
 
         foreach ($roles as $id => [$nombre, $descripcion]) {

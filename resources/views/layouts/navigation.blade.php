@@ -27,8 +27,8 @@
                         </x-nav-link>
                     @endif
                     
-                    <!-- 2b. TÉCNICO: solo la carga de lecturas del recorrido -->
-                    @if(Auth::user()->esTecnico())
+                    <!-- 2b. PLOMERO: solo la carga de lecturas del recorrido -->
+                    @if(Auth::user()->esPlomero())
                         <x-nav-link :href="route('lecturas.planilla')" :active="request()->routeIs('lecturas.planilla*')">
                             {{ __('Carga de Lecturas') }}
                         </x-nav-link>
@@ -127,7 +127,7 @@
                 </x-responsive-nav-link>
             @endif
 
-            @if(Auth::user()->esTecnico())
+            @if(Auth::user()->esPlomero())
                 <x-responsive-nav-link :href="route('lecturas.planilla')" :active="request()->routeIs('lecturas.planilla*')">
                     {{ __('Carga de Lecturas') }}
                 </x-responsive-nav-link>

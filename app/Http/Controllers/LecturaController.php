@@ -169,13 +169,14 @@ class LecturaController extends Controller
             $lectura->consumo,
             CsvExporter::dinero($lectura->monto),
             ucfirst($lectura->estado ?? Lectura::PENDIENTE),
+            $lectura->observacion ?? '',
         ]);
 
         Historial::registrar('exportacion', 'lecturas', 'Exportó las lecturas de agua a Excel');
 
         return CsvExporter::descargar(
             'lecturas_agua_'.date('Y-m-d_H-i').'.csv',
-            ['ID', 'Socio', 'Mes', 'Gestión', 'Lectura Anterior (m³)', 'Lectura Actual (m³)', 'Consumo (m³)', 'Monto (Bs.)', 'Estado'],
+            ['ID', 'Socio', 'Mes', 'Gestión', 'Lectura Anterior (m³)', 'Lectura Actual (m³)', 'Consumo (m³)', 'Monto (Bs.)', 'Estado', 'Observación'],
             $filas
         );
     }

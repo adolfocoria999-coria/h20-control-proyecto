@@ -17,7 +17,7 @@ return new class extends Migration
     public function up(): void
     {
         DB::table('rols')->updateOrInsert(
-            ['id' => RolUsuario::Tecnico->value],
+            ['id' => RolUsuario::Plomero->value],
             ['nombre' => 'Técnico', 'descripcion' => 'Recorre los medidores y anota las lecturas desde su celular.']
         );
 
@@ -33,7 +33,7 @@ return new class extends Migration
             $table->dropColumn(['zona', 'orden_recorrido']);
         });
 
-        DB::table('users')->where('rol_id', RolUsuario::Tecnico->value)->update(['rol_id' => RolUsuario::Socio->value]);
-        DB::table('rols')->where('id', RolUsuario::Tecnico->value)->delete();
+        DB::table('users')->where('rol_id', RolUsuario::Plomero->value)->update(['rol_id' => RolUsuario::Socio->value]);
+        DB::table('rols')->where('id', RolUsuario::Plomero->value)->delete();
     }
 };

@@ -153,6 +153,9 @@
                                 <span class="px-2.5 py-1 inline-flex text-xs font-extrabold rounded-lg bg-sky-100 text-blue-950 border border-sky-200">
                                     {{ number_format((float)$lectura->consumo, 1, '.', '') }} m³
                                 </span>
+                                @if($lectura->observacion)
+                                    <div class="mt-1 max-w-[14rem] whitespace-normal text-xs font-bold text-amber-800" title="Observación del recorrido">📝 {{ $lectura->observacion }}</div>
+                                @endif
                             </td>
                             
                             <td data-label="Monto (Bs.)" class="px-3 py-4 font-extrabold text-emerald-600 whitespace-nowrap">
