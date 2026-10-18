@@ -44,6 +44,7 @@ class UsuarioRequest extends FormRequest
             'ci' => is_string($this->ci) ? Str::upper($limpiar($this->ci)) : $this->ci,
             'telefono' => $telefono,
             'email' => is_string($this->email) ? Str::lower(trim($this->email)) : $this->email,
+            'zona' => $limpiar($this->zona) ?: null,
         ]);
     }
 
@@ -59,6 +60,9 @@ class UsuarioRequest extends FormRequest
             'rol_id' => 'required|integer|exists:rols,id',
             'ci' => ['nullable', 'string', 'max:20', 'regex:'.self::PATRON_CI, Rule::unique('users')->ignore($usuario)],
             'telefono' => ['nullable', 'string', 'regex:'.self::PATRON_TELEFONO],
+            // Recorrido del técnico: zona o calle y orden de visita
+            'zona' => ['nullable', 'string', 'max:60'],
+            'orden_recorrido' => ['nullable', 'integer', 'min:1', 'max:9999'],
         ];
     }
 

@@ -15,7 +15,9 @@
 
             <div class="md:flex md:items-end md:justify-between gap-4">
                 <div>
-                    <a href="{{ route('lecturas.index') }}" class="text-xs font-bold text-blue-700 hover:underline">← Volver a Lecturas</a>
+                    @if($esGestion)
+                        <a href="{{ route('lecturas.index') }}" class="text-xs font-bold text-blue-700 hover:underline">← Volver a Lecturas</a>
+                    @endif
                     <h2 class="font-extrabold text-3xl text-blue-950 leading-tight">Carga rápida – {{ $periodo }}</h2>
                     <p class="text-sm text-sky-900 mt-1 font-bold">
                         Anota la lectura del medidor de cada socio. La anterior la completa el sistema. Deja vacío a quien todavía no visitaste.
@@ -56,6 +58,15 @@
             <div class="bg-white rounded-2xl shadow-md border border-sky-100 p-4 flex flex-col sm:flex-row gap-3 sm:items-center">
                 <input type="search" id="buscar" placeholder="🔍 Buscar socio por nombre o C.I."
                        class="flex-1 px-4 py-2.5 rounded-xl border border-sky-300 text-sm font-semibold text-blue-950 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                @if($zonas->isNotEmpty())
+                    <select id="zona" class="px-4 py-2.5 rounded-xl border border-sky-300 text-sm font-semibold text-blue-950 bg-white" aria-label="Zona">
+                        <option value="">📍 Todas las zonas</option>
+                        @foreach($zonas as $zona)
+                            <option value="{{ $zona }}">{{ $zona }}</option>
+                        @endforeach
+                        <option value="__sin">Sin zona</option>
+                    </select>
+                @endif
                 <label class="inline-flex items-center gap-2 text-sm font-bold text-blue-950 cursor-pointer">
                     <input type="checkbox" id="solo_faltan" class="rounded border-sky-400 text-blue-600" @checked($pendientes > 0)>
                     Mostrar solo los que faltan
@@ -78,17 +89,28 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-sky-100 text-blue-950">
+                            @php $zonaAnterior = false; @endphp
                             @forelse($filas as $fila)
+                                @if($zonas->isNotEmpty() && $fila->socio->zona !== $zonaAnterior)
+                                    @php $zonaAnterior = $fila->socio->zona; @endphp
+                                    <tr class="encabezado-zona bg-sky-100" data-zona="{{ $fila->socio->zona ?? '__sin' }}">
+                                        <td colspan="4" class="px-4 py-2 text-xs font-black uppercase tracking-wider text-blue-900">📍 {{ $fila->socio->zona ?? 'Sin zona' }}</td>
+                                    </tr>
+                                @endif
                                 @php
                                     $id = $fila->socio->id;
                                     $errorFila = $errors->first("lecturas.{$id}.actual") ?: $errors->first("lecturas.{$id}.anterior");
                                 @endphp
                                 <tr class="fila {{ $fila->registrada ? 'bg-emerald-50/60' : '' }} {{ $errorFila ? 'bg-red-50' : '' }}"
                                     data-buscar="{{ mb_strtolower($fila->socio->name.' '.$fila->socio->ci) }}"
+                                    data-zona="{{ $fila->socio->zona ?? '__sin' }}"
                                     data-registrada="{{ $fila->registrada ? 1 : 0 }}">
                                     <td data-label="Socio" class="px-4 py-3">
                                         <div class="font-extrabold">{{ $fila->socio->name }}</div>
-                                        <div class="text-xs font-bold text-sky-700">C.I. {{ $fila->socio->ci ?? 'S/N' }}</div>
+                                        <div class="text-xs font-bold text-sky-700">
+                                            @if($fila->socio->orden_recorrido)<span class="font-black">N.º {{ $fila->socio->orden_recorrido }}</span> · @endif
+                                            C.I. {{ $fila->socio->ci ?? 'S/N' }}
+                                        </div>
                                         @if($errorFila)
                                             <div class="mt-1 text-xs font-bold text-red-700">{{ $errorFila }}</div>
                                         @endif
@@ -98,7 +120,9 @@
                                         <td data-label="Lectura anterior" class="px-4 py-3 text-right font-bold text-sky-800">{{ Lectura::m3($fila->registrada->lectura_anterior) }}</td>
                                         <td data-label="Lectura actual" class="px-4 py-3 text-right">
                                             <span class="font-black">{{ Lectura::m3($fila->registrada->lectura_actual) }}</span>
-                                            <a href="{{ route('lecturas.edit', $fila->registrada->id) }}" class="ml-2 text-xs font-extrabold text-blue-700 hover:underline">Editar</a>
+                                            @if($esGestion)
+                                                <a href="{{ route('lecturas.edit', $fila->registrada->id) }}" class="ml-2 text-xs font-extrabold text-blue-700 hover:underline">Editar</a>
+                                            @endif
                                         </td>
                                         <td data-label="Consumo · Monto" class="px-4 py-3 text-right">
                                             <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
@@ -241,19 +265,27 @@
             // Búsqueda y "solo los que faltan"
             const buscar = document.getElementById('buscar');
             const soloFaltan = document.getElementById('solo_faltan');
+            const zona = document.getElementById('zona');
+            const encabezados = [...document.querySelectorAll('tr.encabezado-zona')];
             function filtrar() {
                 const termino = buscar.value.toLowerCase().trim();
+                const zonaElegida = zona ? zona.value : '';
                 let visibles = 0;
+                const zonasVisibles = new Set();
                 filas.forEach(fila => {
                     const ver = (!termino || fila.dataset.buscar.includes(termino))
+                        && (!zonaElegida || fila.dataset.zona === zonaElegida)
                         && !(soloFaltan.checked && fila.dataset.registrada === '1');
                     fila.style.display = ver ? '' : 'none';
-                    if (ver) visibles++;
+                    if (ver) { visibles++; zonasVisibles.add(fila.dataset.zona); }
                 });
+                // El título de cada zona solo se muestra si tiene socios visibles
+                encabezados.forEach(e => e.style.display = zonasVisibles.has(e.dataset.zona) ? '' : 'none');
                 document.getElementById('sin-coincidencias').classList.toggle('hidden', visibles > 0 || filas.length === 0);
             }
             buscar.addEventListener('input', filtrar);
             soloFaltan.addEventListener('change', filtrar);
+            if (zona) zona.addEventListener('change', filtrar);
 
             filtrar();
             resumen();

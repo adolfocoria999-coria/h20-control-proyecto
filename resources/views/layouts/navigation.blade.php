@@ -27,6 +27,13 @@
                         </x-nav-link>
                     @endif
                     
+                    <!-- 2b. TÉCNICO: solo la carga de lecturas del recorrido -->
+                    @if(Auth::user()->esTecnico())
+                        <x-nav-link :href="route('lecturas.planilla')" :active="request()->routeIs('lecturas.planilla*')">
+                            {{ __('Carga de Lecturas') }}
+                        </x-nav-link>
+                    @endif
+
                     <!-- 3. VISTA EXCLUSIVA DE CONSUMO PARA SOCIO (3) -->
                     @if(Auth::user()->esSocio())
                         <x-nav-link :href="route('socio.consumo')" :active="request()->routeIs('socio.consumo')">
@@ -117,6 +124,12 @@
             @if(Auth::user()->esAdmin())
                 <x-responsive-nav-link :href="route('lecturas.index')" :active="request()->routeIs('lecturas.*')">
                     {{ __('Lecturas de Agua') }}
+                </x-responsive-nav-link>
+            @endif
+
+            @if(Auth::user()->esTecnico())
+                <x-responsive-nav-link :href="route('lecturas.planilla')" :active="request()->routeIs('lecturas.planilla*')">
+                    {{ __('Carga de Lecturas') }}
                 </x-responsive-nav-link>
             @endif
 

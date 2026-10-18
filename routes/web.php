@@ -46,6 +46,15 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
 });
 
 // ==========================================================
+// SUPERADMIN, ADMIN Y TÉCNICO: carga de lecturas en el recorrido
+// ==========================================================
+Route::middleware(['auth', 'role:superadmin,admin,tecnico'])->group(function () {
+    // Carga rápida del mes: todos los socios en una planilla (el técnico la usa desde el celular)
+    Route::get('/lecturas/planilla', [PlanillaLecturasController::class, 'index'])->name('lecturas.planilla');
+    Route::post('/lecturas/planilla', [PlanillaLecturasController::class, 'store'])->name('lecturas.planilla.store');
+});
+
+// ==========================================================
 // SUPERADMIN Y ADMIN (HACIENDA)
 // ==========================================================
 Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
@@ -62,10 +71,6 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
     // Aviso de deuda/corte por WhatsApp (incluye socios dados de baja que aún deben)
     Route::get('/reportes/socios/{socio}/whatsapp', [ReporteController::class, 'notificar'])->name('reportes.notificar')->withTrashed();
-
-    // Carga rápida del mes: todos los socios en una planilla
-    Route::get('/lecturas/planilla', [PlanillaLecturasController::class, 'index'])->name('lecturas.planilla');
-    Route::post('/lecturas/planilla', [PlanillaLecturasController::class, 'store'])->name('lecturas.planilla.store');
 
     // RUTA AJAX: Obtener la última lectura
     Route::get('/lecturas/ultima/{usuario_id}', [LecturaController::class, 'obtenerUltimaLectura'])->name('lecturas.ultima');

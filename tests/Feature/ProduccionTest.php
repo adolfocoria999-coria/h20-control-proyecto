@@ -58,7 +58,7 @@ class ProduccionTest extends TestCase
         $this->seed();
         $this->seed();
 
-        $this->assertSame(3, DB::table('rols')->count());
+        $this->assertSame(4, DB::table('rols')->count()); // superadmin, admin, socio y técnico
         $this->assertSame(3, TarifaMulta::count());
         $this->assertSame(1, User::count());
     }
@@ -66,7 +66,7 @@ class ProduccionTest extends TestCase
     public function test_migrate_crea_roles_y_tarifas_sin_ejecutar_seeders(): void
     {
         // RefreshDatabase ya ejecutó todas las migraciones
-        $this->assertSame(3, DB::table('rols')->count());
+        $this->assertSame(4, DB::table('rols')->count()); // superadmin, admin, socio y técnico
         $this->assertSame(3, TarifaMulta::count());
         $this->assertSame(0, User::count()); // sin ADMIN_EMAIL no crea superadmin
     }

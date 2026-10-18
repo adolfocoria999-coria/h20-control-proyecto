@@ -105,6 +105,9 @@
                                         <div class="ml-4">
                                             <div class="text-sm font-extrabold text-blue-950 nombre-socio">{{ $user->name }}</div>
                                             <div class="text-xs text-blue-700 font-bold">{{ $user->email }}</div>
+                                            @if($user->zona)
+                                                <div class="text-xs text-sky-700 font-bold">📍 {{ $user->zona }}{{ $user->orden_recorrido ? ' · N.º '.$user->orden_recorrido : '' }}</div>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -134,6 +137,8 @@
                                             $badgeClasses = 'bg-blue-800 text-white font-black shadow-md shadow-blue-500/20';
                                         } elseif (str_contains(strtolower($rolNombre), 'admin')) {
                                             $badgeClasses = 'bg-sky-600 text-white font-black shadow-md shadow-sky-500/20';
+                                        } elseif ($user->esTecnico()) {
+                                            $badgeClasses = 'bg-amber-100 text-amber-800 border-amber-200 font-black';
                                         } else {
                                             $badgeClasses = 'bg-sky-100 text-blue-800 border-sky-200 font-bold';
                                         }

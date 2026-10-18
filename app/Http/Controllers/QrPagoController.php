@@ -10,14 +10,14 @@ use Illuminate\Support\Facades\Storage;
 class QrPagoController extends Controller
 {
     /**
-     * Imagen del QR. Los socios solo la ven mientras esté disponible (no vencida).
+     * Imagen del QR. Fuera de Hacienda y el superadmin, solo se ve mientras esté disponible (no vencida).
      */
     public function imagen(Request $request)
     {
         $qr = QrPago::actual();
 
         abort_unless($qr->existe(), 404, 'No hay un QR de pago cargado.');
-        abort_if($request->user()->esSocio() && ! $qr->disponible(), 404, 'El QR de pago no está disponible.');
+        abort_if(! $request->user()->esAdmin() && ! $qr->disponible(), 404, 'El QR de pago no está disponible.');
 
         return Storage::disk('archivos')->response($qr->ruta, 'qr_otb.'.pathinfo($qr->ruta, PATHINFO_EXTENSION));
     }

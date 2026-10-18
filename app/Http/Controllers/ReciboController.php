@@ -53,7 +53,7 @@ class ReciboController extends Controller
     // Solo pagos confirmados; el socio no puede ver recibos de otros
     private function autorizar(Request $request, ?int $duenio, bool $pagado): void
     {
-        abort_if($request->user()->esSocio() && $request->user()->id !== $duenio, 403, 'Este recibo no es tuyo.');
+        abort_if(! $request->user()->esAdmin() && $request->user()->id !== $duenio, 403, 'Este recibo no es tuyo.');
         abort_unless($pagado, 404, 'Este cobro todavía no está pagado.');
     }
 

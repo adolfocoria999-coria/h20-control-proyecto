@@ -34,6 +34,8 @@ class User extends Authenticatable
         'telefono',
         'rol_id',
         'debe_cambiar_clave',
+        'zona',
+        'orden_recorrido',
     ];
 
     /**
@@ -110,6 +112,12 @@ class User extends Authenticatable
         return $this->rolUsuario() === RolUsuario::Socio;
     }
 
+    // Recorre los medidores y anota las lecturas (solo la planilla de carga)
+    public function esTecnico(): bool
+    {
+        return $this->rolUsuario() === RolUsuario::Tecnico;
+    }
+
     /**
      * Pantalla de inicio según el rol del usuario.
      */
@@ -118,6 +126,7 @@ class User extends Authenticatable
         return match (true) {
             $this->esSuperAdmin() => route('usuarios.index'),
             $this->esAdmin() => route('lecturas.index'),
+            $this->esTecnico() => route('lecturas.planilla'),
             default => route('socio.consumo'),
         };
     }

@@ -11,14 +11,16 @@ enum RolUsuario: int
     case SuperAdmin = 1;
     case Admin = 2;
     case Socio = 3;
+    case Tecnico = 4;
 
-    // Alias corto: superadmin, admin, socio (middleware `role:` e historial)
+    // Alias corto: superadmin, admin, socio, tecnico (middleware `role:` e historial)
     public function alias(): string
     {
         return match ($this) {
             self::SuperAdmin => 'superadmin',
             self::Admin => 'admin',
             self::Socio => 'socio',
+            self::Tecnico => 'tecnico',
         };
     }
 
@@ -28,6 +30,7 @@ enum RolUsuario: int
             'superadmin' => 'Superadministrador',
             'admin' => 'Administrador',
             'socio' => 'Socio',
+            'tecnico' => 'Técnico',
             default => 'Sin rol',
         };
     }
@@ -41,6 +44,7 @@ enum RolUsuario: int
             'superadmin' => self::SuperAdmin,
             'admin' => self::Admin,
             'socio' => self::Socio,
+            'tecnico' => self::Tecnico,
         };
     }
 }

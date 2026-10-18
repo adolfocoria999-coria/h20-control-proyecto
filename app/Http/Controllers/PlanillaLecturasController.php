@@ -35,6 +35,8 @@ class PlanillaLecturasController extends Controller
             'registradas' => $filas->whereNotNull('registrada')->count(),
             'tarifa' => Ajuste::tarifaM3(),
             'gestiones' => range((int) date('Y') + 1, (int) date('Y') - 4),
+            'zonas' => $filas->pluck('socio.zona')->filter()->unique()->values(),
+            'esGestion' => $request->user()->esAdmin(),
         ]);
     }
 
@@ -118,7 +120,10 @@ class PlanillaLecturasController extends Controller
     private function filas(int $mes, int $gestion): Collection
     {
         $orden = $gestion * 12 + $mes;
-        $socios = User::orderBy('name')->get(['id', 'name', 'ci']);
+        // En el orden del recorrido del técnico: zona y n.º de orden (los que no tienen, al final)
+        $socios = User::orderByRaw('zona is null, zona, orden_recorrido is null, orden_recorrido')
+            ->orderBy('name')
+            ->get(['id', 'name', 'ci', 'zona', 'orden_recorrido']);
 
         $columnas = ['id', 'user_id', 'mes', 'gestion', 'lectura_anterior', 'lectura_actual', 'consumo', 'estado'];
         $delPeriodo = Lectura::where(['mes' => $mes, 'gestion' => $gestion])->get($columnas)->keyBy('user_id');
