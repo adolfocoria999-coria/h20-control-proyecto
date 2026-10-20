@@ -39,6 +39,14 @@
 
             <x-mensajes-sesion />
 
+            @if($esGestion && $registradas > 0)
+                <a href="{{ route('lecturas.avisos', ['mes' => $mes, 'gestion' => $gestion]) }}"
+                   class="flex items-center justify-between gap-3 p-4 bg-white rounded-2xl shadow border border-emerald-200 hover:bg-emerald-50 transition-colors">
+                    <span class="text-sm font-bold text-blue-950">📲 Avisa por WhatsApp a los socios que ya tienen su lectura de {{ $periodo }}</span>
+                    <span class="text-sm font-extrabold text-emerald-700 whitespace-nowrap">Avisar →</span>
+                </a>
+            @endif
+
             {{-- Estado del envío: lecturas guardadas en el celular sin señal, sesión vencida, etc. --}}
             <div id="estado-envio" class="hidden p-4 rounded-r-xl border-l-4 shadow-md text-sm font-bold" role="status">
                 <span id="estado-texto"></span>

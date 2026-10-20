@@ -33,7 +33,7 @@ class Lectura extends Model
     ];
 
     // Datos internos del cobro: el historial ya registra la acción de pago
-    protected array $ignorarEnHistorial = ['fecha_pago', 'monto_pagado', 'cobrado_por', 'tarifa_m3', 'foto'];
+    protected array $ignorarEnHistorial = ['fecha_pago', 'monto_pagado', 'cobrado_por', 'tarifa_m3', 'foto', 'avisado_at'];
 
     protected function casts(): array
     {
@@ -46,6 +46,7 @@ class Lectura extends Model
             'tarifa_m3' => 'decimal:2',
             'metodo_pago' => MetodoPago::class,
             'fecha_pago' => 'datetime',
+            'avisado_at' => 'datetime',
             'monto_pagado' => 'decimal:2',
         ];
     }

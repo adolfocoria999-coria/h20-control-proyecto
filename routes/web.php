@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArqueoController;
+use App\Http\Controllers\AvisoLecturaController;
 use App\Http\Controllers\BalanceMensualController;
 use App\Http\Controllers\FotoMedidorController;
 use App\Http\Controllers\HistorialController;
@@ -83,6 +84,10 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
     // Aviso de deuda/corte por WhatsApp (incluye socios dados de baja que aún deben)
     Route::get('/reportes/socios/{socio}/whatsapp', [ReporteController::class, 'notificar'])->name('reportes.notificar')->withTrashed();
+
+    // Aviso al socio por WhatsApp "con un toque" cuando se registra su lectura
+    Route::get('/lecturas/avisos', [AvisoLecturaController::class, 'index'])->name('lecturas.avisos');
+    Route::get('/lecturas/{lectura}/avisar', [AvisoLecturaController::class, 'avisar'])->name('lecturas.avisar');
 
     // RUTA AJAX: Obtener la última lectura
     Route::get('/lecturas/ultima/{usuario_id}', [LecturaController::class, 'obtenerUltimaLectura'])->name('lecturas.ultima');

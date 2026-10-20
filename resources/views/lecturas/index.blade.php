@@ -15,6 +15,9 @@
                     <!-- 📊 BOTÓN DE EXPORTACIÓN A EXCEL -->
                     <x-boton-excel :href="route('lecturas.exportar', request()->query())" />
 
+                    <a href="{{ route('lecturas.avisos') }}" class="inline-flex items-center justify-center bg-white hover:bg-sky-50 text-blue-900 border-2 border-blue-200 px-5 py-3 rounded-xl font-extrabold shadow-md transition-all">
+                        📲 Avisar a los socios
+                    </a>
                     <a href="{{ route('lecturas.planilla') }}" class="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-extrabold shadow-lg shadow-emerald-400/50 transition-all">
                         📋 Carga rápida del mes
                     </a>
@@ -191,6 +194,13 @@
                                                        class="h-8 rounded-xl">
                                             <span class="hidden lg:inline">Confirmar Pago</span>
                                         </x-boton-pagar>
+                                        @if(\App\Support\WhatsApp::numero($lectura->usuario?->telefono))
+                                            <a href="{{ route('lecturas.avisar', $lectura) }}" target="_blank" rel="noopener"
+                                               class="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm h-8 transition-all hover:scale-105 {{ $lectura->avisado_at ? 'bg-white border border-emerald-300 text-emerald-800' : 'bg-emerald-500 hover:bg-emerald-600 text-white' }}"
+                                               title="{{ $lectura->avisado_at ? 'Avisado el '.$lectura->avisado_at->format('d/m/Y H:i').' — reenviar' : 'Avisar por WhatsApp' }}">
+                                                📲 <span class="hidden lg:inline">{{ $lectura->avisado_at ? 'Avisado' : 'Avisar' }}</span>
+                                            </a>
+                                        @endif
                                     @else
                                         <x-boton-pdf chico :href="route('recibos.agua', $lectura)" title="Descargar recibo en PDF">
                                             <span class="hidden lg:inline">Recibo</span>
