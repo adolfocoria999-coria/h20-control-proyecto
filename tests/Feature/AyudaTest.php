@@ -115,7 +115,7 @@ class AyudaTest extends TestCase
         $this->preguntar($this->socio, 'hola', [['rol' => 'usuario', 'texto' => 'como pago con qr'], ['rol' => 'asistente', 'texto' => 'Toca Mostrar Código QR']])
             ->assertOk()->assertJson(['modo' => 'ia', 'fuentes' => []]);
 
-        Http::assertSent(fn (Request $pedido) => str_contains($pedido['messages'][0]['content'], 'Saludos, agradecimientos')
+        Http::assertSent(fn (Request $pedido) => str_contains($pedido['messages'][0]['content'], 'Saludos o agradecimientos')
             && str_contains($pedido['messages'][0]['content'], 'Preguntas básicas sobre el servicio de agua'));
     }
 
