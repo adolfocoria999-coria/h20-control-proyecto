@@ -69,7 +69,7 @@ class RespaldoTest extends TestCase
 
         $this->actingAs($this->superadmin)->get('/respaldos')->assertOk()
             ->assertSee('Restaurar un respaldo')
-            ->assertSee('Todavía no se descargó ningún respaldo');
+            ->assertSee('Aún no descargaste ningún respaldo');
     }
 
     public function test_descargar_pide_la_contrasena(): void
@@ -189,6 +189,7 @@ class RespaldoTest extends TestCase
         Ajuste::guardar('ultimo_respaldo', now()->subDays(12)->toIso8601String().'|Hacienda');
 
         $this->actingAs($this->superadmin)->get('/respaldos')
-            ->assertSee('El último respaldo es de hace 12 días');
+            ->assertSee('hace 12 días')
+            ->assertSee('Es buen momento para descargar uno nuevo');
     }
 }

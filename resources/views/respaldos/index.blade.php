@@ -19,12 +19,14 @@
 
             {{-- Estado del último respaldo --}}
             @if(! $ultimo)
-                <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-sm font-bold text-red-900">
-                    ⚠️ Todavía no se descargó ningún respaldo. Si se pierde la base de datos, se perderían todos los datos.
+                <div class="p-4 bg-sky-50 border-l-4 border-sky-500 rounded-r-xl text-sm font-bold text-sky-900">
+                    💾 Aún no descargaste ningún respaldo. Te recomendamos descargar uno ahora y luego una vez por semana,
+                    así siempre tendrás una copia de seguridad fuera del servidor.
                 </div>
             @elseif($ultimo['dias'] >= $diasAviso)
-                <div class="p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl text-sm font-bold text-amber-900">
-                    ⚠️ El último respaldo es de hace {{ $ultimo['dias'] }} días ({{ $ultimo['fecha']->format('d/m/Y H:i') }}, por {{ $ultimo['por'] }}). Conviene hacer uno al menos cada semana.
+                <div class="p-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-xl text-sm font-bold text-amber-900">
+                    💾 Tu último respaldo es del {{ $ultimo['fecha']->format('d/m/Y') }} (hace {{ $ultimo['dias'] }} días, por {{ $ultimo['por'] }}).
+                    Es buen momento para descargar uno nuevo.
                 </div>
             @else
                 <div class="p-4 bg-emerald-50 border-l-4 border-emerald-600 rounded-r-xl text-sm font-bold text-emerald-900">
