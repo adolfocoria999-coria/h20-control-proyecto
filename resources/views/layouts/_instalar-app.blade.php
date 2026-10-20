@@ -82,7 +82,8 @@
 
         // Ya instalada (abierta desde el ícono): no se ofrece instalar
         if (enApp()) {
-            document.querySelectorAll('.opcion-instalar').forEach(o => o.classList.add('hidden'));
+            // Dentro de la app instalada la opción confirma que ya está instalada (no desaparece)
+            document.querySelectorAll('.opcion-instalar').forEach(o => o.textContent = '✅ App instalada');
         } else if (window.h2oInstalar?.pedido || esIphone) {
             mostrarAviso();
         }
