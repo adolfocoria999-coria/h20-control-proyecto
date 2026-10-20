@@ -12,6 +12,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrPagoController;
 use App\Http\Controllers\ReciboController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\RespaldoController;
 use App\Http\Controllers\TarifaAguaController;
 use App\Http\Controllers\TarifaMultaController;
 use App\Http\Controllers\UserController;
@@ -36,6 +37,9 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     Route::get('/usuarios/exportar', [UserController::class, 'exportar'])->name('usuarios.exportar');
     Route::resource('usuarios', UserController::class)->except('show');
     Route::post('/usuarios/{usuario}/restablecer-clave', [UserController::class, 'restablecerClave'])->name('usuarios.restablecer-clave');
+
+    // Restaurar un respaldo reemplaza todos los datos: solo el superadministrador
+    Route::post('/respaldos/restaurar', [RespaldoController::class, 'restaurar'])->name('respaldos.restaurar');
 
     // Tarifa del agua por m³ (decisión de la directiva)
     Route::get('/tarifa-agua', [TarifaAguaController::class, 'index'])->name('tarifa-agua.index');
@@ -70,6 +74,10 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     // HISTORIAL DE ACTIVIDADES (consulta)
     Route::get('/historial/exportar', [HistorialController::class, 'exportar'])->name('historial.exportar');
     Route::get('/historial', [HistorialController::class, 'index'])->name('historial.index');
+
+    // RESPALDOS: se descargan al dispositivo (pide la contraseña)
+    Route::get('/respaldos', [RespaldoController::class, 'index'])->name('respaldos.index');
+    Route::post('/respaldos/descargar', [RespaldoController::class, 'descargar'])->name('respaldos.descargar');
 
     // MÓDULO DE REPORTES
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');

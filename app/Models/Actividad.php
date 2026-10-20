@@ -52,6 +52,7 @@ class Actividad extends Model
         'qr' => 'QR de pago',
         'reportes' => 'Reportes',
         'historial' => 'Historial',
+        'respaldos' => 'Respaldos',
     ];
 
     protected $fillable = [

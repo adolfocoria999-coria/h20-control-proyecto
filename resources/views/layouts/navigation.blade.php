@@ -63,6 +63,9 @@
                         <x-nav-link :href="route('historial.index')" :active="request()->routeIs('historial.*')">
                             {{ __('Historial') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('respaldos.index')" :active="request()->routeIs('respaldos.*')">
+                            {{ __('Respaldos') }}
+                        </x-nav-link>
                     @endif
 
                 </div>
@@ -162,6 +165,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('historial.index')" :active="request()->routeIs('historial.*')">
                     {{ __('Historial') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('respaldos.index')" :active="request()->routeIs('respaldos.*')">
+                    {{ __('Respaldos') }}
                 </x-responsive-nav-link>
             @endif
 

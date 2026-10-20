@@ -109,19 +109,20 @@ Agrega `- phpstan-baseline.neon` a `includes` en `phpstan.neon` y quita `continu
 
 ## Respaldos
 
-Antes de migrar o actualizar, saca una copia de la base:
+Menú **Respaldos** (presidente y Hacienda):
 
-```powershell
-C:\xampp\mysql\bin\mysqldump.exe -u root h2o_control --result-file=respaldo_h2o.sql
+- **Descargar respaldo:** pide la contraseña y descarga al dispositivo un archivo `respaldo_h2o_AAAA-MM-DD_HHMM.json.gz` con **toda** la base: socios, lecturas, pagos, multas, finanzas, tarifas, historial y los archivos (QR, comprobantes y fotos). No queda guardado en el servidor: guárdalo en otra computadora, un pendrive o una nube personal. Hazlo al menos **una vez por semana**; la pantalla avisa si pasaron más de 7 días.
+- **Restaurar** (solo el presidente): sube un respaldo, escribe `RESTAURAR` y confirma la contraseña. Reemplaza todos los datos por los del archivo en una sola transacción (si algo falla, no se cambia nada) y cierra la sesión.
+- Cada descarga y restauración queda en el Historial.
+
+Desde la consola (archivos grandes o restaurar en otra máquina):
+
+```bash
+php artisan respaldo:crear                       # storage/app/respaldo_h2o_....json.gz
+php artisan respaldo:restaurar ruta/al/respaldo.json.gz
 ```
 
-Para restaurarla:
-
-```powershell
-cmd /c "C:\xampp\mysql\bin\mysql.exe -u root h2o_control < respaldo_h2o.sql"
-```
-
-Los archivos `.sql` están en `.gitignore`: contienen datos personales de los socios y **nunca deben subirse al repositorio**.
+Un respaldo solo se puede restaurar en una versión del sistema igual o más nueva que la que lo generó. Los respaldos contienen datos personales de los socios: **nunca deben subirse al repositorio** (`*.sql` y `*.gz` están en `.gitignore`).
 
 ---
 

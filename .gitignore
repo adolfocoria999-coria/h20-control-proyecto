@@ -25,6 +25,7 @@ Thumbs.db
 
 # Respaldos de base de datos (contienen datos personales de los socios)
 *.sql
+*.gz
 
 # Archivos comprimidos del proyecto
 *.zip
