@@ -64,7 +64,7 @@ class RespaldoTest extends TestCase
 
         $this->actingAs($this->admin)->get('/respaldos')->assertOk()
             ->assertSee('Descargar respaldo')
-            ->assertDontSee('Restaurar un respaldo');
+            ->assertDontSee('action="'.route('respaldos.restaurar').'"', false); // sin formulario de restaurar
         $this->actingAs($this->admin)->post('/respaldos/restaurar', [])->assertForbidden();
 
         $this->actingAs($this->superadmin)->get('/respaldos')->assertOk()

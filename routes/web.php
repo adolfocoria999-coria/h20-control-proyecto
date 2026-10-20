@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ArqueoController;
 use App\Http\Controllers\AvisoLecturaController;
+use App\Http\Controllers\AyudaController;
 use App\Http\Controllers\BalanceMensualController;
 use App\Http\Controllers\FotoMedidorController;
 use App\Http\Controllers\HistorialController;
@@ -154,6 +155,9 @@ Route::middleware(['auth', 'role:superadmin,admin,socio'])->group(function () {
 // CUALQUIER USUARIO AUTENTICADO
 // ==========================================================
 Route::middleware('auth')->group(function () {
+    // Asistente de Ayuda (cómo usar el sistema, según el rol)
+    Route::post('/ayuda', [AyudaController::class, 'preguntar'])->name('ayuda.preguntar');
+
     // Notificaciones en el celular (Web Push)
     Route::post('/notificaciones/suscripcion', [NotificacionController::class, 'suscribir'])->name('notificaciones.suscribir');
     Route::delete('/notificaciones/suscripcion', [NotificacionController::class, 'desuscribir'])->name('notificaciones.desuscribir');

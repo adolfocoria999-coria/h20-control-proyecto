@@ -34,6 +34,9 @@
             <main>
                 {{ $slot }}
             </main>
+
+            {{-- Asistente de ayuda (botón flotante 💬) --}}
+            <x-ayuda-chat />
         </div>
     </body>
 </html>

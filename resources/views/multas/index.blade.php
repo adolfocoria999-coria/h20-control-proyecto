@@ -14,6 +14,9 @@
                     <x-boton-excel :href="route('multas.exportar', request()->query())" />
 
                     @if($esGestion)
+                        <a href="{{ route('tarifas-multas.index') }}" class="bg-white hover:bg-sky-50 text-blue-900 border-2 border-blue-200 font-extrabold px-5 py-3 rounded-xl shadow-md transition-all text-sm flex items-center gap-2">
+                            ⚙️ Tarifas de multas
+                        </a>
                         <a href="{{ route('multas.create') }}" class="bg-blue-700 hover:bg-blue-800 text-white font-extrabold px-5 py-3 rounded-xl shadow-lg transition-all text-sm flex items-center gap-2">
                             ➕ Registrar Nueva Multa
                         </a>
