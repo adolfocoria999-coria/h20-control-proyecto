@@ -2,6 +2,8 @@
 
 Sistema web para que una **OTB** administre su servicio de agua potable: lecturas de medidores, cobros, multas, finanzas y reportes de morosidad.
 
+La historia del desarrollo, etapa por etapa y con fechas, está en [docs/CRONOLOGIA.md](docs/CRONOLOGIA.md).
+
 Hecho con **Laravel 12**, Blade, Tailwind CSS 3 (compilado con Vite) y Alpine.js. Base de datos MySQL/MariaDB.
 
 ---
