@@ -8,6 +8,7 @@ use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\LecturaController;
 use App\Http\Controllers\MisPagosController;
 use App\Http\Controllers\MultaController;
+use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\PlanillaLecturasController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrPagoController;
@@ -153,6 +154,11 @@ Route::middleware(['auth', 'role:superadmin,admin,socio'])->group(function () {
 // CUALQUIER USUARIO AUTENTICADO
 // ==========================================================
 Route::middleware('auth')->group(function () {
+    // Notificaciones en el celular (Web Push)
+    Route::post('/notificaciones/suscripcion', [NotificacionController::class, 'suscribir'])->name('notificaciones.suscribir');
+    Route::delete('/notificaciones/suscripcion', [NotificacionController::class, 'desuscribir'])->name('notificaciones.desuscribir');
+    Route::post('/notificaciones/prueba', [NotificacionController::class, 'probar'])->middleware('throttle:5,1')->name('notificaciones.probar');
+
     // Perfil de Usuario
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

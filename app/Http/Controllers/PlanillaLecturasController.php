@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Ajuste;
 use App\Models\Lectura;
 use App\Models\User;
+use App\Services\AvisoLectura;
 use App\Support\Meses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+
+use function Illuminate\Support\defer;
 
 /**
  * Carga rápida del mes: todos los socios en una planilla para anotar la lectura
@@ -129,13 +132,18 @@ class PlanillaLecturasController extends Controller
                 : back()->withInput()->with('error', $mensaje);
         }
 
-        DB::transaction(function () use ($nuevas, &$ids) {
+        $creadas = collect();
+        DB::transaction(function () use ($nuevas, &$ids, $creadas) {
             foreach ($nuevas as $datos) {
                 $lectura = Lectura::create($datos);
                 $lectura->encadenarSiguiente();
                 $ids[$lectura->user_id] = $lectura->id;
+                $creadas->push($lectura);
             }
         });
+
+        // Aviso en el celular a los socios que lo activaron (después de responder: no demora la carga)
+        defer(fn () => AvisoLectura::notificarAlCelular($creadas));
 
         $mensaje = count($nuevas).' lectura(s) de '.$periodo.' registrada(s) ✓'
             .($yaRegistradas ? ' Ya estaban registradas (no se cambiaron): '.implode(', ', $yaRegistradas).'.' : '');

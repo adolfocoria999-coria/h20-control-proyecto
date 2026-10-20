@@ -9,7 +9,7 @@
  * Solo se guarda la planilla (y estilos/íconos): el resto de las pantallas
  * siempre se piden al servidor. Al cerrar sesión se borra esta copia.
  */
-const VERSION = 'h2o-v1';
+const VERSION = 'h2o-v2';
 const ESTATICOS = `${VERSION}-estaticos`;
 const PAGINAS = `${VERSION}-paginas`;
 
@@ -34,6 +34,35 @@ self.addEventListener('message', (evento) => {
     if (evento.data === 'borrar-copias') {
         evento.waitUntil(caches.delete(PAGINAS));
     }
+});
+
+// Notificación que manda el sistema (p. ej. "💧 Tu lectura de octubre"), aunque la app esté cerrada
+self.addEventListener('push', (evento) => {
+    let datos = {};
+    try {
+        datos = evento.data ? evento.data.json() : {};
+    } catch {
+        datos = { body: evento.data ? evento.data.text() : '' };
+    }
+
+    evento.waitUntil(self.registration.showNotification(datos.title || 'H2O Control', {
+        body: datos.body || '',
+        icon: datos.icon || '/iconos/icono-192.png',
+        badge: '/iconos/icono-192.png',
+        data: { url: datos.url || '/dashboard' },
+        lang: 'es',
+    }));
+});
+
+// Al tocarla se abre (o enfoca) el sistema en la pantalla indicada
+self.addEventListener('notificationclick', (evento) => {
+    evento.notification.close();
+    const destino = new URL(evento.notification.data?.url || '/dashboard', self.location.origin).href;
+
+    evento.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ventanas) => {
+        const abierta = ventanas.find((v) => v.url === destino);
+        return abierta ? abierta.focus() : self.clients.openWindow(destino);
+    }));
 });
 
 const esPlanilla = (url) => url.pathname === '/lecturas/planilla';

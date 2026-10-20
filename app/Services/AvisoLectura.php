@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Lectura;
+use App\Models\SuscripcionPush;
+use Illuminate\Support\Collection;
 
 /**
  * Texto del aviso por WhatsApp al socio cuando se registra su lectura del mes:
@@ -40,6 +42,25 @@ class AvisoLectura
         $lineas[] = 'Consultas: '.config('otb.telefono_finanzas').'.';
 
         return implode("\n", $lineas);
+    }
+
+    /**
+     * Notificación en el celular a los socios de estas lecturas recién registradas
+     * (solo a quienes instalaron la app y aceptaron recibir avisos).
+     *
+     * @param  Collection<int, Lectura>  $lecturas
+     */
+    public static function notificarAlCelular(Collection $lecturas): array
+    {
+        $suscripciones = SuscripcionPush::whereIn('user_id', $lecturas->pluck('user_id'))->get()->groupBy('user_id');
+
+        $envios = $lecturas->flatMap(fn (Lectura $l) => $suscripciones->get($l->user_id, collect())->map(fn ($s) => [$s, [
+            'titulo' => "💧 Tu lectura de {$l->mes_nombre} {$l->gestion}",
+            'cuerpo' => 'Consumo de '.Lectura::m3($l->consumo).' · '.self::bs($l->monto).'. Toca para ver el detalle y pagar.',
+            'url' => route('socio.consumo'),
+        ]]));
+
+        return app(NotificacionPush::class)->enviarVarias($envios->values());
     }
 
     private static function bs(float $monto): string

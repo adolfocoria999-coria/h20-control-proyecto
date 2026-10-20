@@ -7,6 +7,7 @@ use App\Http\Requests\LecturaRequest;
 use App\Models\Ajuste;
 use App\Models\Lectura;
 use App\Models\User;
+use App\Services\AvisoLectura;
 use App\Services\CsvExporter;
 use App\Services\Historial;
 use App\Services\QrPago;
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+
+use function Illuminate\Support\defer;
 
 class LecturaController extends Controller
 {
@@ -94,7 +97,11 @@ class LecturaController extends Controller
     // 3. Guarda la nueva lectura (el consumo lo calcula el modelo)
     public function store(LecturaRequest $request)
     {
-        Lectura::create($request->validated())->encadenarSiguiente();
+        $lectura = Lectura::create($request->validated());
+        $lectura->encadenarSiguiente();
+
+        // Aviso en el celular al socio, si lo activó (después de responder)
+        defer(fn () => AvisoLectura::notificarAlCelular(collect([$lectura])));
 
         return redirect()->route('lecturas.index')->with('success', 'Lectura registrada ✓');
     }

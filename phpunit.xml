@@ -32,5 +32,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="WEBPUSH_PUBLIC_KEY" value="BMBrQVVoPjbtZ_5pMmxf8dOJdVs0TCWqJq9nVZQcKJJRs5lGgPI7lLMKUxoHT6LyYWtXQRWexdiwAXllbcxprF8"/>
+        <env name="WEBPUSH_PRIVATE_KEY" value="0JvvMUNeAN7bwoPz716521OU5laOjFBtzSmjmSpuUKA"/>
     </php>
 </phpunit>
