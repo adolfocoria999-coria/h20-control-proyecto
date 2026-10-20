@@ -18,6 +18,8 @@
             
             @include('layouts.navigation')
 
+            @include('layouts._instalar-app')
+
             {{-- Aviso de QR de pago faltante o por vencer (solo administradores) --}}
             <x-alerta-qr />
 

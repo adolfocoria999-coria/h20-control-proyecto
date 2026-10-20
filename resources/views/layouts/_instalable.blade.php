@@ -7,6 +7,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="H2O Control">
 <script>
+    // El navegador avisa que la app se puede instalar (puede llegar antes de que cargue la página):
+    // se guarda para mostrar el botón "Instalar" (ver layouts/_instalar-app)
+    window.h2oInstalar = { pedido: null };
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.h2oInstalar.pedido = e;
+        document.dispatchEvent(new Event('h2o-instalable'));
+    });
+    window.addEventListener('appinstalled', () => {
+        window.h2oInstalar.pedido = null;
+        document.dispatchEvent(new Event('h2o-instalada'));
+    });
+
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(() => {}));
 

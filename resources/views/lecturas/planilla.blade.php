@@ -54,12 +54,6 @@
                 <a id="ir-login" href="{{ route('login') }}" class="hidden ml-2 underline font-black">Ingresar de nuevo</a>
             </div>
 
-            {{-- Instalar en el celular (Android/Chrome muestra el botón; en iPhone se explica cómo) --}}
-            <div id="instalar-app" class="hidden p-4 bg-white rounded-2xl shadow border border-sky-100 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-                <p class="text-sm font-bold text-blue-950">📲 Instala H2O Control en tu celular: se abre como una app y funciona sin señal.</p>
-                <button type="button" id="instalar" class="hidden bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-xl font-extrabold text-sm shadow">Instalar</button>
-                <p id="instalar-iphone" class="hidden text-xs font-bold text-sky-800">En iPhone: toca Compartir ⬆️ y luego "Agregar a inicio".</p>
-            </div>
             <x-errores-formulario />
 
             <div class="grid grid-cols-3 gap-2 sm:gap-3">
@@ -593,29 +587,6 @@
 
             // Al abrir con señal, envía lo que haya quedado pendiente (lecturas y fotos)
             if (navigator.onLine) enviarPendientes(); else mostrarPendientes();
-
-            // ---------- Instalar como app ----------
-            const enApp = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-            let pedidoInstalar = null;
-            window.addEventListener('beforeinstallprompt', e => {
-                e.preventDefault();
-                pedidoInstalar = e;
-                if (!enApp) {
-                    document.getElementById('instalar-app').classList.remove('hidden');
-                    document.getElementById('instalar').classList.remove('hidden');
-                }
-            });
-            document.getElementById('instalar').addEventListener('click', async () => {
-                if (!pedidoInstalar) return;
-                pedidoInstalar.prompt();
-                await pedidoInstalar.userChoice;
-                pedidoInstalar = null;
-                document.getElementById('instalar-app').classList.add('hidden');
-            });
-            if (!enApp && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
-                document.getElementById('instalar-app').classList.remove('hidden');
-                document.getElementById('instalar-iphone').classList.remove('hidden');
-            }
 
             // Búsqueda y "solo los que faltan"
             const buscar = document.getElementById('buscar');

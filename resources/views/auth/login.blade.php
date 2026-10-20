@@ -88,5 +88,6 @@
         &copy; {{ date('Y') }} Sistema H2O Control &mdash; OTB
     </div>
 
+    <div class="fixed inset-x-0 top-0 z-40">@include('layouts._instalar-app')</div>
 </body>
 </html>
