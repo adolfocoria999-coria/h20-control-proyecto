@@ -119,6 +119,26 @@ class AyudaTest extends TestCase
             && str_contains($pedido['messages'][0]['content'], 'Preguntas básicas sobre el servicio de agua'));
     }
 
+    public function test_que_puedes_hacer_lista_todos_los_temas_del_rol(): void
+    {
+        // Sin IA: la lista completa del rol, sin inventar nada
+        $this->preguntar($this->socio, '¿Qué cosas puedes enseñarme?')->assertOk()
+            ->assertJson(['fuentes' => []])
+            ->assertJsonPath('respuesta', fn ($r) => str_starts_with($r, 'Puedo explicarte estos temas del sistema:')
+                && str_contains($r, '- Pagar con QR') && str_contains($r, '- Mis pagos y mis recibos')
+                && ! str_contains($r, 'Cargar lecturas sin señal'));
+
+        // Con IA: recibe siempre la lista completa de temas y la regla de no inventar
+        config(['services.groq.key' => 'clave-de-prueba']);
+        Http::fake(['api.groq.com/*' => Http::response(['choices' => [['message' => ['content' => 'Te puedo explicar…']]]])]);
+        $this->preguntar($this->plomero, '¿qué hace el sistema?')->assertJson(['modo' => 'ia', 'fuentes' => []]);
+
+        Http::assertSent(fn (Request $pedido) => str_contains($pedido['messages'][0]['content'], 'TEMAS QUE PUEDES EXPLICAR A ESTE ROL:')
+            && str_contains($pedido['messages'][0]['content'], '- Cargar lecturas sin señal')
+            && ! str_contains($pedido['messages'][0]['content'], '- Pagar con QR')
+            && str_contains($pedido['messages'][0]['content'], 'NUNCA menciones funciones'));
+    }
+
     public function test_si_la_ia_falla_responde_con_el_manual(): void
     {
         config(['services.groq.key' => 'clave-de-prueba']);

@@ -93,17 +93,29 @@ class Ayuda
         $fuentes = array_column($secciones, 'titulo');
 
         $charla = self::esCharla($pregunta);
+        $consultaTemas = self::preguntaPorTemas($pregunta);
 
         if (config('services.groq.key')) {
             try {
                 return [
                     'respuesta' => self::preguntarIa($pregunta, $rol, $secciones, $conversacion),
-                    'fuentes' => $charla ? [] : $fuentes, // un saludo no "cita" el manual
+                    'fuentes' => $charla || $consultaTemas ? [] : $fuentes, // un saludo no "cita" el manual
                     'modo' => 'ia',
                 ];
             } catch (Throwable $e) {
                 report($e); // sin IA disponible: se responde con el manual
             }
+        }
+
+        if ($consultaTemas) {
+            $temas = self::temas($rol);
+
+            return [
+                'respuesta' => "Puedo explicarte estos temas del sistema:\n".implode("\n", array_map(fn ($t) => "- {$t}", $temas))
+                    ."\n\nPregúntame por cualquiera de ellos.",
+                'fuentes' => [],
+                'modo' => 'manual',
+            ];
         }
 
         if ($charla) {
@@ -138,18 +150,23 @@ class Ayuda
             ? implode("\n\n", array_map(fn ($s) => "### {$s['titulo']}\n{$s['texto']}", $secciones))
             : '(No hay secciones del manual relacionadas con esta pregunta.)';
 
+        $temas = implode("\n", array_map(fn ($t) => "- {$t}", self::temas($rol)));
+
         $sistema = implode("\n", [
             'Eres el asistente de ayuda de "H2O Control", el sistema de agua potable de la '.config('otb.nombre').' (Bolivia).',
             "Quien pregunta tiene el rol: {$rolNombre}.",
             'Responde en español, breve y claro, con pasos numerados cuando sea un procedimiento. Usa **negrita** para nombres de botones y menús.',
             'Usa ÚNICAMENTE la información del MANUAL de abajo. No inventes pantallas, botones, montos ni datos.',
             'Si el manual no responde una pregunta sobre el sistema, dilo con honestidad y sugiere consultar a Hacienda ('.config('otb.telefono_finanzas').').',
-            'Saludos, agradecimientos o "¿qué puedes hacer?": responde cordial y breve, y ofrece 2 o 3 ejemplos de lo que puedes explicar según el rol.',
+            'Saludos o agradecimientos: responde cordial y breve, y ofrece 2 o 3 ejemplos tomados de los TEMAS.',
+            'Si preguntan qué puedes hacer, qué puedes enseñar o qué hace el sistema: resume los TEMAS de abajo agrupados por área (máximo 8 puntos). Es la lista completa de lo que el sistema hace para este rol.',
+            'NUNCA menciones funciones, alertas, configuraciones ni pantallas que no estén en los TEMAS o en el MANUAL.',
             'Preguntas básicas sobre el servicio de agua (qué es un m³, cómo leer el medidor, cómo detectar una fuga, cómo ahorrar agua, qué es la OTB): responde en 2 a 4 frases con conocimiento general, sin inventar reglas, montos ni funciones del sistema.',
             'Si las secciones del MANUAL no tienen relación con la pregunta, ignóralas.',
             'No tienes acceso a datos de socios, deudas ni pagos: si preguntan por montos o datos personales, indica dónde verlos en el sistema.',
             'Si preguntan algo sin relación con el sistema ni con el servicio de agua (deportes, tareas, política, etc.), di amablemente que solo ayudas con H2O Control y el servicio de agua.',
-            '', 'MANUAL:', $manual,
+            '', 'TEMAS QUE PUEDES EXPLICAR A ESTE ROL:', $temas,
+            '', 'MANUAL (secciones relacionadas con la pregunta):', $manual,
         ]);
 
         $mensajes = [['role' => 'system', 'content' => $sistema]];
@@ -177,12 +194,30 @@ class Ayuda
         return $texto;
     }
 
-    // "hola", "buenas tardes", "gracias", "qué puedes hacer": no es una consulta del manual
+    /**
+     * Títulos de todo lo que el manual explica a este rol.
+     *
+     * @return list<string>
+     */
+    public static function temas(?RolUsuario $rol): array
+    {
+        return array_column(self::manual($rol), 'titulo');
+    }
+
+    // "¿qué puedes hacer / enseñarme?", "¿qué hace el sistema?", "¿en qué me ayudas?"
+    private static function preguntaPorTemas(string $pregunta): bool
+    {
+        $texto = Str::lower(Str::ascii($pregunta));
+
+        return (bool) preg_match('/(que|cuales).{0,25}(puedes|sabes|podes) (hacer|ensenar|explicar)|(puedes|podes) (ensenar|explicar)me|que (hace|puede hacer|funciones tiene) (el sistema|la app|h2o)|en que me (ayudas|puedes ayudar)|que temas/', $texto);
+    }
+
+    // "hola", "buenas tardes", "gracias": no es una consulta del manual
     private static function esCharla(string $pregunta): bool
     {
         $texto = trim(preg_replace('/[^a-z ]/', '', Str::lower(Str::ascii($pregunta))));
 
-        return (bool) preg_match('/^(hola|buenas|buenos dias|buenas tardes|buenas noches|gracias|muchas gracias|ok|okay|vale|chau|adios|hasta luego|que (puedes|sabes) hacer|quien eres|ayuda)( .{0,20})?$/', $texto);
+        return (bool) preg_match('/^(hola|buenas|buenos dias|buenas tardes|buenas noches|gracias|muchas gracias|ok|okay|vale|chau|adios|hasta luego|quien eres|ayuda)( .{0,20})?$/', $texto);
     }
 
     /**
