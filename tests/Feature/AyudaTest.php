@@ -92,6 +92,33 @@ class AyudaTest extends TestCase
         });
     }
 
+    public function test_saluda_y_responde_preguntas_basicas_del_servicio(): void
+    {
+        // Sin IA: el saludo es amable y no cita el manual
+        $this->preguntar($this->socio, 'hola')->assertOk()
+            ->assertJson(['fuentes' => []])
+            ->assertJsonPath('respuesta', fn ($r) => str_starts_with($r, '¡Hola! 👋 Soy la ayuda de H2O Control'));
+        $this->preguntar($this->socio, 'Buenas tardes!')->assertJsonPath('respuesta', fn ($r) => str_contains($r, 'Soy la ayuda'));
+
+        // Preguntas básicas del servicio de agua, para todos los roles
+        $this->preguntar($this->socio, '¿cómo sé si tengo una fuga?')->assertJsonPath('fuentes.0', 'Cómo saber si tengo una fuga de agua');
+        $this->preguntar($this->plomero, 'qué es un metro cúbico')->assertJsonPath('fuentes.0', 'Conceptos básicos: medidor, lectura, m³ y consumo');
+        $this->preguntar($this->socio, 'consejos para ahorrar agua')->assertJsonPath('fuentes.0', 'Consejos para ahorrar agua');
+    }
+
+    public function test_con_ia_el_saludo_no_cita_el_manual_y_las_reglas_permiten_lo_basico(): void
+    {
+        config(['services.groq.key' => 'clave-de-prueba']);
+        Http::fake(['api.groq.com/*' => Http::response(['choices' => [['message' => ['content' => '¡Hola! ¿En qué te ayudo?']]]])]);
+
+        // Una conversación previa sobre socios no se mezcla con el saludo
+        $this->preguntar($this->socio, 'hola', [['rol' => 'usuario', 'texto' => 'como pago con qr'], ['rol' => 'asistente', 'texto' => 'Toca Mostrar Código QR']])
+            ->assertOk()->assertJson(['modo' => 'ia', 'fuentes' => []]);
+
+        Http::assertSent(fn (Request $pedido) => str_contains($pedido['messages'][0]['content'], 'Saludos, agradecimientos')
+            && str_contains($pedido['messages'][0]['content'], 'Preguntas básicas sobre el servicio de agua'));
+    }
+
     public function test_si_la_ia_falla_responde_con_el_manual(): void
     {
         config(['services.groq.key' => 'clave-de-prueba']);

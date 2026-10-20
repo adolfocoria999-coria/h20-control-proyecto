@@ -82,15 +82,36 @@ class Ayuda
     public static function responder(string $pregunta, User $usuario, array $conversacion = []): array
     {
         $rol = $usuario->rolUsuario();
-        $secciones = self::buscar($pregunta.' '.implode(' ', array_column(array_slice($conversacion, -2), 'texto')), $rol);
+
+        // Las fuentes salen de la pregunta; si es una repregunta corta ("¿y en efectivo?"),
+        // se usa también lo último que preguntó el usuario
+        $secciones = self::buscar($pregunta, $rol);
+        if (! $secciones && $conversacion) {
+            $anterior = collect($conversacion)->where('rol', 'usuario')->last()['texto'] ?? '';
+            $secciones = self::buscar($pregunta.' '.$anterior, $rol);
+        }
         $fuentes = array_column($secciones, 'titulo');
+
+        $charla = self::esCharla($pregunta);
 
         if (config('services.groq.key')) {
             try {
-                return ['respuesta' => self::preguntarIa($pregunta, $rol, $secciones, $conversacion), 'fuentes' => $fuentes, 'modo' => 'ia'];
+                return [
+                    'respuesta' => self::preguntarIa($pregunta, $rol, $secciones, $conversacion),
+                    'fuentes' => $charla ? [] : $fuentes, // un saludo no "cita" el manual
+                    'modo' => 'ia',
+                ];
             } catch (Throwable $e) {
                 report($e); // sin IA disponible: se responde con el manual
             }
+        }
+
+        if ($charla) {
+            return [
+                'respuesta' => '¡Hola! 👋 Soy la ayuda de H2O Control. Pregúntame cómo hacer algo en el sistema, por ejemplo: "¿cómo pago con QR?", "¿dónde veo mi recibo?" o "¿cómo sé si tengo una fuga?".',
+                'fuentes' => [],
+                'modo' => 'manual',
+            ];
         }
 
         if (! $secciones) {
@@ -122,9 +143,12 @@ class Ayuda
             "Quien pregunta tiene el rol: {$rolNombre}.",
             'Responde en español, breve y claro, con pasos numerados cuando sea un procedimiento. Usa **negrita** para nombres de botones y menús.',
             'Usa ÚNICAMENTE la información del MANUAL de abajo. No inventes pantallas, botones, montos ni datos.',
-            'Si el manual no responde la pregunta, dilo con honestidad y sugiere consultar a Hacienda ('.config('otb.telefono_finanzas').').',
+            'Si el manual no responde una pregunta sobre el sistema, dilo con honestidad y sugiere consultar a Hacienda ('.config('otb.telefono_finanzas').').',
+            'Saludos, agradecimientos o "¿qué puedes hacer?": responde cordial y breve, y ofrece 2 o 3 ejemplos de lo que puedes explicar según el rol.',
+            'Preguntas básicas sobre el servicio de agua (qué es un m³, cómo leer el medidor, cómo detectar una fuga, cómo ahorrar agua, qué es la OTB): responde en 2 a 4 frases con conocimiento general, sin inventar reglas, montos ni funciones del sistema.',
+            'Si las secciones del MANUAL no tienen relación con la pregunta, ignóralas.',
             'No tienes acceso a datos de socios, deudas ni pagos: si preguntan por montos o datos personales, indica dónde verlos en el sistema.',
-            'Responde solo sobre el uso del sistema; si preguntan otra cosa, di amablemente que solo ayudas con H2O Control.',
+            'Si preguntan algo sin relación con el sistema ni con el servicio de agua (deportes, tareas, política, etc.), di amablemente que solo ayudas con H2O Control y el servicio de agua.',
             '', 'MANUAL:', $manual,
         ]);
 
@@ -151,6 +175,14 @@ class Ayuda
         }
 
         return $texto;
+    }
+
+    // "hola", "buenas tardes", "gracias", "qué puedes hacer": no es una consulta del manual
+    private static function esCharla(string $pregunta): bool
+    {
+        $texto = trim(preg_replace('/[^a-z ]/', '', Str::lower(Str::ascii($pregunta))));
+
+        return (bool) preg_match('/^(hola|buenas|buenos dias|buenas tardes|buenas noches|gracias|muchas gracias|ok|okay|vale|chau|adios|hasta luego|que (puedes|sabes) hacer|quien eres|ayuda)( .{0,20})?$/', $texto);
     }
 
     /**

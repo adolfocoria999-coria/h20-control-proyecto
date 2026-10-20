@@ -64,6 +64,31 @@ return [
         'texto' => 'Menú (☰ en el celular, o tu nombre arriba a la derecha) → **Cerrar Sesión**. Si eres plomero y tienes lecturas guardadas en el celular sin enviar, el sistema te avisa antes de salir.',
     ],
 
+    [
+        'titulo' => 'Qué es H2O Control y qué puedo preguntar',
+        'roles' => ['todos'],
+        'claves' => 'que es sistema h2o ayuda asistente puedes hacer para que sirve',
+        'texto' => 'H2O Control es el sistema de la OTB para el servicio de agua potable: registra las lecturas de los medidores, calcula el consumo y lo que paga cada socio, controla cobros, multas y finanzas. Puedes preguntarme cómo hacer algo en el sistema (pagar, ver recibos, cargar lecturas, etc.) o dudas básicas sobre el servicio de agua.',
+    ],
+    [
+        'titulo' => 'Conceptos básicos: medidor, lectura, m³ y consumo',
+        'roles' => ['todos'],
+        'claves' => 'medidor lectura metro cubico m3 litros consumo que significa como leer numeros',
+        'texto' => 'El **medidor** cuenta el agua que entra a tu casa. La **lectura** es el número que marca, en metros cúbicos (**m³**); 1 m³ son 1.000 litros. El **consumo** del mes es la lectura actual menos la del mes anterior. Para leer el medidor se toman los números negros (m³ enteros); los rojos o las agujas son fracciones.',
+    ],
+    [
+        'titulo' => 'Cómo saber si tengo una fuga de agua',
+        'roles' => ['todos'],
+        'claves' => 'fuga perdida goteo detectar consumo alto agua se escapa revisar',
+        'texto' => 'Cierra todas las llaves y no uses agua por 30 a 60 minutos. Anota la lectura del medidor antes y después: si los números avanzaron, hay una fuga. Revisa inodoros (agua que corre), llaves que gotean y cañerías con humedad. Si la fuga está antes del medidor o no la encuentras, avisa a la directiva o al plomero.',
+    ],
+    [
+        'titulo' => 'Consejos para ahorrar agua',
+        'roles' => ['todos'],
+        'claves' => 'ahorrar agua consejos gastar menos consumo bajar cuenta',
+        'texto' => 'Repara goteras e inodoros que pierden agua; cierra la llave al cepillarte o enjabonarte; usa balde en vez de manguera para lavar el auto o el patio; riega temprano o al atardecer; junta ropa para lavar con carga completa. Un inodoro que pierde puede gastar varios m³ al mes.',
+    ],
+
     // ================= SOCIO =================
 
     [
