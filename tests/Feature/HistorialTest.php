@@ -182,8 +182,9 @@ class HistorialTest extends TestCase
     public function test_filtra_por_modulo_accion_y_texto(): void
     {
         $this->travelTo('2026-10-15 12:00:00');
-        Actividad::factory()->create(['modulo' => 'multas', 'accion' => 'pago', 'descripcion' => 'Registró el pago de la multa de Ana']);
-        Actividad::factory()->create(['modulo' => 'lecturas', 'accion' => 'creado', 'usuario_nombre' => 'Luis']);
+        // Nombres y textos fijos: uno al azar ("Mariana", "Luisa"...) también coincidiría con la búsqueda
+        Actividad::factory()->create(['modulo' => 'multas', 'accion' => 'pago', 'usuario_nombre' => 'Pedro', 'descripcion' => 'Registró el pago de la multa de Ana']);
+        Actividad::factory()->create(['modulo' => 'lecturas', 'accion' => 'creado', 'usuario_nombre' => 'Luis', 'descripcion' => 'Registró la lectura de Rosa']);
 
         $total = fn (string $url) => $this->actingAs($this->admin)->get($url)->viewData('actividades')->total();
 
