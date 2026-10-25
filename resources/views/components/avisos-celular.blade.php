@@ -26,7 +26,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
                 <p class="font-extrabold text-blue-950">🔔 Avisos en este celular</p>
-                <p id="avisos-texto" class="text-xs font-bold text-sky-800 mt-0.5">Recibe un aviso cuando se registre tu lectura de agua.</p>
+                <p id="avisos-texto" class="text-xs font-bold text-sky-800 mt-0.5">Recibe un aviso cuando se registre tu lectura de agua o la directiva envíe un mensaje.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <button type="button" id="avisos-activar" class="hidden bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-xl font-extrabold text-sm shadow">Activar avisos</button>
@@ -89,7 +89,7 @@
                 const suscripcion = await registro.pushManager.getSubscription();
                 suscripcion
                     ? mostrar('✅ Activados: te avisaremos en este celular cuando se registre tu lectura.', ['probar', 'desactivar'])
-                    : mostrar('Recibe un aviso en este celular cuando se registre tu lectura de agua.', ['activar']);
+                    : mostrar('Recibe un aviso en este celular cuando se registre tu lectura de agua o la directiva envíe un mensaje.', ['activar']);
             }
 
             activar.addEventListener('click', async () => {

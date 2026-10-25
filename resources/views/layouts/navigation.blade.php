@@ -1,3 +1,7 @@
+@php
+    // Mensajes de la directiva que el usuario todavía no abrió (no aplica al plomero)
+    $mensajesSinLeer = Auth::user()->esPlomero() ? 0 : \App\Models\Comunicado::sinLeer(Auth::user());
+@endphp
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100 print:hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -52,6 +56,13 @@
 
                         <x-nav-link :href="route('multas.index')" :active="request()->routeIs('multas.*')">
                             {{ __('Multas y Sanciones') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('mensajes.index')" :active="request()->routeIs('mensajes.*')">
+                            {{ __('Mensajes') }}
+                            @if($mensajesSinLeer > 0)
+                                <span class="ms-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-600 text-white text-[11px] font-black" title="Mensajes sin leer">{{ $mensajesSinLeer }}</span>
+                            @endif
                         </x-nav-link>
                     @endunless
 
@@ -158,6 +169,13 @@
 
                 <x-responsive-nav-link :href="route('multas.index')" :active="request()->routeIs('multas.*')">
                     {{ __('Multas y Sanciones') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('mensajes.index')" :active="request()->routeIs('mensajes.*')">
+                    {{ __('Mensajes') }}
+                    @if($mensajesSinLeer > 0)
+                        <span class="ms-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-600 text-white text-[11px] font-black">{{ $mensajesSinLeer }}</span>
+                    @endif
                 </x-responsive-nav-link>
             @endunless
 

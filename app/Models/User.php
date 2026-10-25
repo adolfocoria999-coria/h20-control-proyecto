@@ -19,7 +19,7 @@ class User extends Authenticatable
     // SoftDeletes: dar de baja a un socio conserva su historial de lecturas y multas
     use HasFactory, Notifiable, RegistraEnHistorial, SoftDeletes;
 
-    protected array $ignorarEnHistorial = ['email_verified_at', 'debe_cambiar_clave'];
+    protected array $ignorarEnHistorial = ['email_verified_at', 'debe_cambiar_clave', 'mensajes_leidos_at'];
 
     /**
      * The attributes that are mass assignable.
@@ -59,6 +59,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'debe_cambiar_clave' => 'boolean',
+            'mensajes_leidos_at' => 'datetime',
         ];
     }
 

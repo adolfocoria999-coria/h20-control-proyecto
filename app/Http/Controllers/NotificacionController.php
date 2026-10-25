@@ -56,7 +56,7 @@ class NotificacionController extends Controller
     public function probar(Request $request, NotificacionPush $push)
     {
         $resultado = $push->enviar($request->user(), '🔔 Notificaciones activadas',
-            'Así te avisaremos cuando se registre tu lectura de agua.', route('socio.consumo'));
+            'Así te avisaremos cuando se registre tu lectura de agua o la directiva envíe un mensaje.', route('socio.consumo'));
 
         return response()->json($resultado, $resultado['enviadas'] ? 200 : 422);
     }
