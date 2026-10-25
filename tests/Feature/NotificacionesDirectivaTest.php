@@ -12,7 +12,7 @@ use Database\Seeders\RolSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class MensajesTest extends TestCase
+class NotificacionesDirectivaTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -64,7 +64,7 @@ class MensajesTest extends TestCase
 
     private function enviar(User $quien, array $datos = [])
     {
-        return $this->actingAs($quien)->post('/mensajes', $datos + [
+        return $this->actingAs($quien)->post('/notificaciones', $datos + [
             'titulo' => 'Asamblea general',
             'mensaje' => "El sábado a las 9:00 en la sede.\nAsistencia obligatoria.",
         ]);
@@ -72,20 +72,20 @@ class MensajesTest extends TestCase
 
     public function test_la_directiva_envia_un_mensaje_y_todos_los_socios_lo_ven(): void
     {
-        $this->enviar($this->hacienda)->assertRedirect('/mensajes')->assertSessionHas('success');
+        $this->enviar($this->hacienda)->assertRedirect('/notificaciones')->assertSessionHas('success');
 
         $comunicado = Comunicado::sole();
         $this->assertSame($this->hacienda->id, $comunicado->user_id);
         $this->assertFalse($comunicado->importante);
 
         foreach ([$this->juan, $this->rosa] as $socio) {
-            $this->actingAs($socio)->get('/mensajes')->assertOk()
+            $this->actingAs($socio)->get('/notificaciones')->assertOk()
                 ->assertSee('Asamblea general')->assertSee('Asistencia obligatoria.')
                 ->assertDontSee('Enviar a todos los socios');
         }
 
-        $this->actingAs($this->presidente)->get('/mensajes')->assertOk()->assertSee('Enviar a todos los socios');
-        $this->enviar($this->presidente, ['titulo' => 'Corte de agua', 'importante' => '1'])->assertRedirect('/mensajes');
+        $this->actingAs($this->presidente)->get('/notificaciones')->assertOk()->assertSee('Enviar a todos los socios');
+        $this->enviar($this->presidente, ['titulo' => 'Corte de agua', 'importante' => '1'])->assertRedirect('/notificaciones');
         $this->assertTrue(Comunicado::where('titulo', 'Corte de agua')->sole()->importante);
 
         $this->assertSame(2, Actividad::where('modulo', 'mensajes')->count());
@@ -95,13 +95,13 @@ class MensajesTest extends TestCase
     {
         $this->enviar($this->juan)->assertForbidden();
         $this->enviar($this->plomero)->assertForbidden();
-        $this->actingAs($this->plomero)->get('/mensajes')->assertForbidden();
+        $this->actingAs($this->plomero)->get('/notificaciones')->assertForbidden();
         $this->assertSame(0, Comunicado::count());
 
         $this->enviar($this->hacienda);
         $comunicado = Comunicado::sole();
-        $this->actingAs($this->juan)->delete("/mensajes/{$comunicado->id}")->assertForbidden();
-        $this->actingAs($this->presidente)->delete("/mensajes/{$comunicado->id}")->assertRedirect('/mensajes');
+        $this->actingAs($this->juan)->delete("/notificaciones/{$comunicado->id}")->assertForbidden();
+        $this->actingAs($this->presidente)->delete("/notificaciones/{$comunicado->id}")->assertRedirect('/notificaciones');
         $this->assertSame(0, Comunicado::count());
     }
 
@@ -123,8 +123,8 @@ class MensajesTest extends TestCase
         $this->assertSame(2, Comunicado::sinLeer($this->juan));
         $this->assertSame(0, Comunicado::sinLeer($this->hacienda)); // los suyos no cuentan
 
-        $this->actingAs($this->juan)->get('/mi-consumo')->assertSee('title="Mensajes sin leer"', false);
-        $this->actingAs($this->juan)->get('/mensajes')->assertSee('Nuevo');
+        $this->actingAs($this->juan)->get('/mi-consumo')->assertSee('title="Notificaciones sin leer"', false);
+        $this->actingAs($this->juan)->get('/notificaciones')->assertSee('Nuevo');
 
         $this->assertSame(0, Comunicado::sinLeer($this->juan->fresh()));
         $this->assertSame(2, Comunicado::sinLeer($this->rosa));
@@ -151,7 +151,7 @@ class MensajesTest extends TestCase
     {
         $this->enviar($this->hacienda, ['mensaje' => '<script>alert(1)</script> reunión']);
 
-        $this->actingAs($this->juan)->get('/mensajes')
+        $this->actingAs($this->juan)->get('/notificaciones')
             ->assertDontSee('<script>alert(1)</script>', false)
             ->assertSee('&lt;script&gt;', false);
     }

@@ -22,7 +22,7 @@ class Comunicado extends Model
     }
 
     /**
-     * Cuántos mensajes llegaron después de la última vez que el usuario abrió Mensajes.
+     * Cuántas notificaciones llegaron después de la última vez que el usuario abrió Notificaciones.
      */
     public static function sinLeer(User $usuario): int
     {

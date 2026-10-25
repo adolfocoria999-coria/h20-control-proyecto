@@ -140,10 +140,10 @@ return [
         'texto' => 'Menú → **Finanzas**: puedes ver el balance de cada mes de la OTB (agua cobrada, multas, otros ingresos, egresos y saldo) y los comprobantes de respaldo.',
     ],
     [
-        'titulo' => 'Mensajes de la directiva',
+        'titulo' => 'Notificaciones de la directiva',
         'roles' => ['socio'],
-        'claves' => 'mensajes mensaje comunicado comunicados aviso anuncio directiva asamblea reunion noticia',
-        'texto' => 'Menú → **Mensajes**: ahí ves los comunicados de la directiva (asambleas, cortes de agua, faenas, etc.). Si hay mensajes nuevos, el menú muestra un número rojo. Si activaste los **avisos en el celular**, también te llega una notificación.',
+        'claves' => 'notificaciones notificacion mensajes mensaje comunicado comunicados aviso anuncio directiva asamblea reunion noticia',
+        'texto' => 'Menú → **Notificaciones**: ahí ves los comunicados de la directiva (asambleas, cortes de agua, faenas, etc.). Si hay notificaciones nuevas, el menú muestra un número rojo. Si activaste los **avisos en el celular**, también te llega una notificación.',
     ],
     [
         'titulo' => 'Si no pago a tiempo',
@@ -230,10 +230,10 @@ return [
         'texto' => 'Lecturas → **📲 Avisar a los socios** (o desde la planilla después de cargar el mes). Cada botón abre WhatsApp con el mensaje escrito (lectura, consumo, monto, deudas anteriores y cómo pagar): solo toca Enviar. Queda marcado ✅ Avisado. Los socios sin celular aparecen como *Avisar en persona*. Para deudores, usa también **Reportes**.',
     ],
     [
-        'titulo' => 'Enviar un mensaje a todos los socios',
+        'titulo' => 'Enviar una notificación a todos los socios',
         'roles' => $gestion,
-        'claves' => 'mensaje mensajes comunicado comunicar avisar todos socios anuncio asamblea corte reunion',
-        'texto' => 'Menú → **Mensajes**: escribe el **título** y el **mensaje** y toca **Enviar a todos los socios**. Marca **⚠️ Importante** para avisos urgentes (corte de agua, emergencia). Los socios lo ven en su módulo Mensajes con un aviso en el menú y, si activaron los avisos, les llega una notificación al celular. Puedes **🗑 Eliminar** un mensaje enviado por error.',
+        'claves' => 'notificacion notificaciones mensaje mensajes comunicado comunicar avisar todos socios anuncio asamblea corte reunion',
+        'texto' => 'Menú → **Notificaciones**: escribe el **título** y el **mensaje** y toca **Enviar a todos los socios**. Marca **⚠️ Importante** para avisos urgentes (corte de agua, emergencia). Los socios la ven en su módulo Notificaciones con un número rojo en el menú y, si activaron los avisos, les llega una notificación al celular. Puedes **🗑 Eliminar** una notificación enviada por error.',
     ],
     [
         'titulo' => 'Multas: registrar, cobrar y condonar',

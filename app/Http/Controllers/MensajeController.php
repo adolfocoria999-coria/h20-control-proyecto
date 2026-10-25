@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 /**
- * Mensajes: la directiva (Hacienda y presidente) envía comunicados que
- * llegan a todos los socios; cada socio los lee en el módulo Mensajes y,
+ * Notificaciones: la directiva (Hacienda y presidente) envía comunicados que
+ * llegan a todos los socios; cada socio los lee en el módulo Notificaciones y,
  * si activó los avisos, recibe una notificación en el celular.
  */
 class MensajeController extends Controller
@@ -21,7 +21,7 @@ class MensajeController extends Controller
         $usuario = $request->user();
         $leidosHasta = $usuario->mensajes_leidos_at;
 
-        // Al abrir Mensajes quedan todos como leídos (sin pasar por el historial)
+        // Al abrir Notificaciones quedan todos como leídos (sin pasar por el historial)
         User::whereKey($usuario->id)->update(['mensajes_leidos_at' => now()]);
 
         return view('mensajes.index', [
@@ -49,7 +49,7 @@ class MensajeController extends Controller
         $socios = User::socios()->get();
 
         Historial::registrar('creado', 'mensajes',
-            'Envió el mensaje "'.$comunicado->titulo.'" a '.$socios->count().' socio(s)', $comunicado);
+            'Envió la notificación "'.$comunicado->titulo.'" a '.$socios->count().' socio(s)', $comunicado);
 
         // Aviso en el celular de los socios que lo activaron (después de responder)
         defer(fn () => app(NotificacionPush::class)->enviar(
@@ -60,15 +60,15 @@ class MensajeController extends Controller
         ));
 
         return redirect()->route('mensajes.index')
-            ->with('success', 'Mensaje enviado ✓ Ya lo pueden leer los '.$socios->count().' socios en "Mensajes".');
+            ->with('success', 'Notificación enviada ✓ Ya la pueden leer los '.$socios->count().' socios en "Notificaciones".');
     }
 
     public function destroy(Comunicado $comunicado)
     {
         $comunicado->delete();
 
-        Historial::registrar('eliminado', 'mensajes', 'Eliminó el mensaje "'.$comunicado->titulo.'"');
+        Historial::registrar('eliminado', 'mensajes', 'Eliminó la notificación "'.$comunicado->titulo.'"');
 
-        return redirect()->route('mensajes.index')->with('success', 'Mensaje eliminado.');
+        return redirect()->route('mensajes.index')->with('success', 'Notificación eliminada.');
     }
 }

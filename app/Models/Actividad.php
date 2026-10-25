@@ -53,7 +53,7 @@ class Actividad extends Model
         'reportes' => 'Reportes',
         'historial' => 'Historial',
         'respaldos' => 'Respaldos',
-        'mensajes' => 'Mensajes',
+        'mensajes' => 'Notificaciones',
     ];
 
     protected $fillable = [

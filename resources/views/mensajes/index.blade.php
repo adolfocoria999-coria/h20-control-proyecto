@@ -5,7 +5,7 @@
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
             <div>
-                <h2 class="font-extrabold text-3xl text-blue-950 leading-tight">Mensajes</h2>
+                <h2 class="font-extrabold text-3xl text-blue-950 leading-tight">Notificaciones</h2>
                 <p class="text-sm text-sky-900 mt-1 font-bold">
                     @if($esAdmin)
                         Comunicados de la directiva para todos los socios ({{ $totalSocios }}).
@@ -20,9 +20,9 @@
             @if($esAdmin)
                 <form method="POST" action="{{ route('mensajes.store') }}"
                       class="bg-white p-6 rounded-2xl shadow-xl border border-sky-100 space-y-4"
-                      onsubmit="return confirm('¿Enviar este mensaje a todos los socios?')">
+                      onsubmit="return confirm('¿Enviar esta notificación a todos los socios?')">
                     @csrf
-                    <h3 class="text-lg font-black text-blue-950">📢 Nuevo mensaje para todos los socios</h3>
+                    <h3 class="text-lg font-black text-blue-950">📢 Nueva notificación para todos los socios</h3>
 
                     <div>
                         <label for="titulo" class="block text-sm font-extrabold text-blue-950 mb-1">Título</label>
@@ -50,7 +50,7 @@
                             Enviar a todos los socios
                         </button>
                     </div>
-                    <p class="text-xs font-bold text-sky-800">Los socios lo verán en "Mensajes" (con un aviso en el menú) y, si activaron los avisos, les llega una notificación al celular.</p>
+                    <p class="text-xs font-bold text-sky-800">Los socios la verán en "Notificaciones" (con un número rojo en el menú) y, si activaron los avisos, también les llega al celular.</p>
                 </form>
             @endif
 
@@ -67,7 +67,7 @@
                             </h3>
                             @if($esAdmin)
                                 <form method="POST" action="{{ route('mensajes.destroy', $comunicado) }}"
-                                      onsubmit="return confirm('¿Eliminar este mensaje? Los socios dejarán de verlo.')">
+                                      onsubmit="return confirm('¿Eliminar esta notificación? Los socios dejarán de verla.')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-xs font-extrabold text-red-700 hover:text-red-900">🗑 Eliminar</button>
@@ -81,7 +81,7 @@
                     </article>
                 @empty
                     <div class="bg-white rounded-2xl shadow-md border border-sky-100 p-8 text-center font-bold text-sky-700">
-                        Todavía no hay mensajes de la directiva.
+                        Todavía no hay notificaciones de la directiva.
                     </div>
                 @endforelse
             </div>

@@ -116,9 +116,9 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     Route::post('/multas/{multa}/pagar', [MultaController::class, 'pagar'])->name('multas.pagar');
     Route::resource('multas', MultaController::class)->except(['index', 'show']);
 
-    // MENSAJES: la directiva envía comunicados a todos los socios
-    Route::post('/mensajes', [MensajeController::class, 'store'])->name('mensajes.store');
-    Route::delete('/mensajes/{comunicado}', [MensajeController::class, 'destroy'])->name('mensajes.destroy');
+    // NOTIFICACIONES: la directiva envía comunicados a todos los socios
+    Route::post('/notificaciones', [MensajeController::class, 'store'])->name('mensajes.store');
+    Route::delete('/notificaciones/{comunicado}', [MensajeController::class, 'destroy'])->whereNumber('comunicado')->name('mensajes.destroy');
 
     // CRUD DE TARIFAS
     Route::resource('tarifas-multas', TarifaMultaController::class)->only(['index', 'store', 'update', 'destroy']);
@@ -129,8 +129,8 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
 // ==========================================================
 Route::middleware(['auth', 'role:superadmin,admin,socio'])->group(function () {
 
-    // Mensajes (comunicados) de la directiva
-    Route::get('/mensajes', [MensajeController::class, 'index'])->name('mensajes.index');
+    // Notificaciones (comunicados) de la directiva
+    Route::get('/notificaciones', [MensajeController::class, 'index'])->name('mensajes.index');
 
     // Vista del socio: solo sus propias lecturas
     Route::get('/mi-consumo', [LecturaController::class, 'miConsumo'])->name('socio.consumo');
