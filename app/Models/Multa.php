@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\MetodoPago;
 use App\Models\Concerns\RegistraEnHistorial;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,6 +16,7 @@ class Multa extends Model
     protected $fillable = [
         'user_id',
         'tarifa_multa_id',
+        'aporte_id',
         'tipo_multa',
         'monto',
         'motivo',
@@ -79,6 +81,34 @@ class Multa extends Model
         return $query->where('estado', self::PENDIENTE);
     }
 
+    // Multas propiamente dichas (sanciones), sin los aportes
+    public function scopeSoloMultas(Builder $query): Builder
+    {
+        return $query->whereNull('aporte_id');
+    }
+
+    // Cuotas de aportes (aniversario, mantenimiento...)
+    public function scopeSoloAportes(Builder $query): Builder
+    {
+        return $query->whereNotNull('aporte_id');
+    }
+
+    public function esAporte(): bool
+    {
+        return $this->aporte_id !== null;
+    }
+
+    // "Multa – Inasistencia a asamblea" o "Aporte – Aniversario de la OTB"
+    protected function concepto(): Attribute
+    {
+        return Attribute::get(fn () => ($this->esAporte() ? 'Aporte' : 'Multa').' – '.$this->tipo_multa);
+    }
+
+    public function aporte()
+    {
+        return $this->belongsTo(Aporte::class);
+    }
+
     public function socio()
     {
         return $this->belongsTo(User::class, 'user_id')->withTrashed();
@@ -104,7 +134,7 @@ class Multa extends Model
 
     protected function etiquetaHistorial(): string
     {
-        return "la multa «{$this->tipo_multa}» de Bs. ".number_format((float) $this->monto, 2, ',', '.')
+        return ($this->esAporte() ? 'el aporte' : 'la multa')." «{$this->tipo_multa}» de Bs. ".number_format((float) $this->monto, 2, ',', '.')
             .' de '.($this->socio->name ?? 'un socio');
     }
 

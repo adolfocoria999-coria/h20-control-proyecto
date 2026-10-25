@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AporteController;
 use App\Http\Controllers\ArqueoController;
 use App\Http\Controllers\AvisoLecturaController;
 use App\Http\Controllers\AyudaController;
@@ -112,8 +113,14 @@ Route::middleware(['auth', 'role:superadmin,admin'])->group(function () {
     // FINANZAS: registro y edición de balances (la consulta es para todos)
     Route::resource('finanzas', BalanceMensualController::class)->except(['index', 'show']);
 
+    // APORTES (cuotas extraordinarias): una cuota por socio, se cobran como las multas
+    Route::get('/aportes/crear', [AporteController::class, 'create'])->name('aportes.create');
+    Route::post('/aportes', [AporteController::class, 'store'])->name('aportes.store');
+    Route::delete('/aportes/{aporte}', [AporteController::class, 'destroy'])->name('aportes.destroy');
+
     // MÓDULO DE MULTAS: gestión (la lista es para todos)
     Route::post('/multas/{multa}/pagar', [MultaController::class, 'pagar'])->name('multas.pagar');
+    Route::patch('/multas/{multa}/condonar', [MultaController::class, 'condonar'])->name('multas.condonar');
     Route::resource('multas', MultaController::class)->except(['index', 'show']);
 
     // NOTIFICACIONES: la directiva envía comunicados a todos los socios

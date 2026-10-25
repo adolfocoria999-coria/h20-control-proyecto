@@ -228,6 +228,9 @@
                                         @if($balance->ingresos_multas > 0)
                                             <div title="Se suma automáticamente al cobrar multas">⚖️ Multas: Bs. {{ number_format($balance->ingresos_multas, 2) }}</div>
                                         @endif
+                                        @if($balance->ingresos_aportes > 0)
+                                            <div title="Se suma automáticamente al cobrar aportes">🎉 Aportes: Bs. {{ number_format($balance->ingresos_aportes, 2) }}</div>
+                                        @endif
                                         @if($balance->ingresos > 0)
                                             <div title="Cargado a mano por Hacienda">✍️ {{ $balance->con_agua_automatica ? 'Otros' : 'Otros (incl. agua)' }}: Bs. {{ number_format($balance->ingresos, 2) }}</div>
                                         @endif

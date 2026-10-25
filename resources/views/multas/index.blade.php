@@ -5,8 +5,8 @@
             <!-- Encabezado y Acciones -->
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
                 <div>
-                    <h1 class="text-3xl font-black text-blue-950">Gestión de Multas y Sanciones</h1>
-                    <p class="text-sm font-bold text-sky-800">Módulo de control de infracciones y recaudación tributaria comunal.</p>
+                    <h1 class="text-3xl font-black text-blue-950">Multas y Aportes</h1>
+                    <p class="text-sm font-bold text-sky-800">Multas por infracciones y aportes para actividades de la OTB (aniversario, mantenimiento, compras...).</p>
                 </div>
 
                 <div class="flex flex-wrap gap-2">
@@ -19,6 +19,9 @@
                         </a>
                         <a href="{{ route('multas.create') }}" class="bg-blue-700 hover:bg-blue-800 text-white font-extrabold px-5 py-3 rounded-xl shadow-lg transition-all text-sm flex items-center gap-2">
                             ➕ Registrar Nueva Multa
+                        </a>
+                        <a href="{{ route('aportes.create') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-5 py-3 rounded-xl shadow-lg transition-all text-sm flex items-center gap-2">
+                            🎉 Nuevo aporte
                         </a>
                     @endif
                 </div>
@@ -33,7 +36,7 @@
                     <div>
                         <p class="text-sm font-bold text-sky-600 uppercase tracking-wider">Pendientes de Cobro</p>
                         <h3 class="text-3xl font-black text-amber-600 mt-1">Bs. {{ number_format($totalPendiente ?? 0, 2) }}</h3>
-                        <p class="text-xs font-bold text-gray-500 mt-1">{{ $cantPendientes ?? 0 }} multas registradas pendientes</p>
+                        <p class="text-xs font-bold text-gray-500 mt-1">{{ $cantPendientes ?? 0 }} multas y aportes pendientes</p>
                     </div>
                     <div class="p-3 bg-amber-100 rounded-full text-amber-500">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +64,7 @@
                     <div>
                         <p class="text-sm font-bold text-sky-600 uppercase tracking-wider">Estado del Sistema</p>
                         <h3 class="text-3xl font-black text-blue-950 mt-1">Activo</h3>
-                        <p class="text-xs font-bold text-gray-500 mt-1">Control de Sanciones OTB</p>
+                        <p class="text-xs font-bold text-gray-500 mt-1">Control de multas y aportes de la OTB</p>
                     </div>
                     <div class="p-3 bg-blue-100 rounded-full text-blue-600">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,15 +74,83 @@
                 </div>
             </div>
 
+            @if($esGestion && $aportes->isNotEmpty())
+                <!-- Aportes: avance de cada actividad -->
+                <div class="mb-8">
+                    <h2 class="text-lg font-black text-blue-950 mb-3">🎉 Aportes</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        @foreach($aportes as $aporte)
+                            @php $a = $aporte->avance; @endphp
+                            <div class="bg-white rounded-2xl p-5 shadow-md border {{ $aporteFiltrado?->id === $aporte->id ? 'border-emerald-500 ring-2 ring-emerald-300' : 'border-sky-100' }}">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <p class="font-black text-blue-950">{{ $aporte->titulo }}</p>
+                                        <p class="text-xs font-bold text-sky-800">
+                                            Bs. {{ number_format((float) $aporte->monto, 2) }} por socio
+                                            @if($aporte->fecha_limite) · hasta el {{ $aporte->fecha_limite->format('d/m/Y') }} @endif
+                                        </p>
+                                    </div>
+                                    @if($a['pagaron'] === 0)
+                                        <form method="POST" action="{{ route('aportes.destroy', $aporte) }}"
+                                              onsubmit="return confirm('¿Eliminar este aporte y las cuotas de todos los socios? Nadie lo pagó todavía.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-xs font-extrabold text-red-700 hover:text-red-900" title="Eliminar aporte">🗑️</button>
+                                        </form>
+                                    @endif
+                                </div>
+                                <div class="mt-3 h-2.5 bg-sky-100 rounded-full overflow-hidden" title="{{ $a['porcentaje'] }}% recaudado">
+                                    <div class="h-full bg-emerald-500 rounded-full" style="width: {{ min(100, $a['porcentaje']) }}%"></div>
+                                </div>
+                                <p class="mt-2 text-sm font-black text-emerald-700">
+                                    Bs. {{ number_format($a['recaudado'], 2) }} <span class="text-xs font-bold text-gray-500">de Bs. {{ number_format($a['esperado'], 2) }}</span>
+                                </p>
+                                <p class="text-xs font-bold text-gray-600">
+                                    {{ $a['pagaron'] }} de {{ $a['socios'] - $a['condonados'] }} socios pagaron
+                                    @if($a['condonados']) · {{ $a['condonados'] }} condonado(s) @endif
+                                </p>
+                                <div class="mt-3 flex flex-wrap gap-2 text-xs font-extrabold">
+                                    <a href="{{ route('multas.index', ['aporte' => $aporte->id, 'estado' => 'pendiente']) }}" class="px-3 py-1.5 rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200">⏳ Quién falta</a>
+                                    <a href="{{ route('multas.index', ['aporte' => $aporte->id]) }}" class="px-3 py-1.5 rounded-lg bg-sky-100 text-blue-900 hover:bg-sky-200">Ver todos</a>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if($aporteFiltrado)
+                <div class="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-600 rounded-r-xl flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-sm font-bold text-emerald-900">
+                        Mostrando el aporte <span class="font-black">«{{ $aporteFiltrado->titulo }}»</span>
+                        @if(request('estado') === 'pendiente') · solo quienes faltan pagar @endif
+                    </p>
+                    <a href="{{ route('multas.index') }}" class="text-xs font-extrabold text-emerald-800 underline">Ver todo</a>
+                </div>
+            @endif
+
             <!-- Filtros de Búsqueda -->
             <div class="bg-white p-6 rounded-2xl border border-sky-100 shadow-md mb-8">
-                <form method="GET" action="{{ route('multas.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <form method="GET" action="{{ route('multas.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    @if(request('aporte'))
+                        <input type="hidden" name="aporte" value="{{ request('aporte') }}">
+                    @endif
+                    <div>
+                        <label class="block text-xs font-bold text-blue-950 mb-1">Tipo:</label>
+                        <select name="tipo" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-2.5 font-bold text-xs text-blue-950 focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- Multas y aportes --</option>
+                            <option value="multas" {{ request('tipo') === 'multas' ? 'selected' : '' }}>⚖️ Solo multas</option>
+                            <option value="aportes" {{ request('tipo') === 'aportes' ? 'selected' : '' }}>🎉 Solo aportes</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-bold text-blue-950 mb-1">Estado de Pago:</label>
                         <select name="estado" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-2.5 font-bold text-xs text-blue-950 focus:ring-2 focus:ring-blue-500">
                             <option value="">-- Todos los Estados --</option>
                             <option value="pendiente" {{ request('estado') === 'pendiente' ? 'selected' : '' }}>Pendiente</option>
                             <option value="pagado" {{ request('estado') === 'pagado' ? 'selected' : '' }}>Pagado</option>
+                            <option value="condonado" {{ request('estado') === 'condonado' ? 'selected' : '' }}>Condonado</option>
                         </select>
                     </div>
 
@@ -108,9 +179,9 @@
                         <thead>
                             <tr class="bg-sky-900 text-white text-xs uppercase tracking-wider font-extrabold">
                                 <th class="py-4 px-6">Socio / Afiliado</th>
-                                <th class="py-4 px-6">Tipo Infracción / Motivo</th>
+                                <th class="py-4 px-6">Concepto / Motivo</th>
                                 <th class="py-4 px-6 text-center">Monto (Bs.)</th>
-                                <th class="py-4 px-6 text-center">Fecha Multa</th>
+                                <th class="py-4 px-6 text-center">Fecha</th>
                                 <th class="py-4 px-6 text-center">Estado</th>
                                 @if($esGestion)
                                     <th class="py-4 px-6 text-center">Acciones</th>
@@ -127,7 +198,12 @@
                                     </td>
 
                                     <!-- Infracción -->
-                                    <td data-label="Tipo Infracción / Motivo" class="py-4 px-6">
+                                    <td data-label="Concepto / Motivo" class="py-4 px-6">
+                                        @if($m->esAporte())
+                                            <span class="inline-block mb-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-black">🎉 Aporte</span>
+                                        @else
+                                            <span class="inline-block mb-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-black">⚖️ Multa</span>
+                                        @endif
                                         <p class="font-bold text-sky-900">
                                             @if($m->tipo_multa && $m->tipo_multa !== 'Multa')
                                                 {{ $m->tipo_multa }}
@@ -148,8 +224,11 @@
                                     </td>
 
                                     <!-- Fecha -->
-                                    <td data-label="Fecha Multa" class="py-4 px-6 text-center text-xs text-gray-600">
+                                    <td data-label="Fecha" class="py-4 px-6 text-center text-xs text-gray-600">
                                         {{ $m->fecha_multa->format('d/m/Y') }}
+                                        @if($m->esAporte() && $m->estado === 'pendiente' && $m->aporte?->fecha_limite)
+                                            <div class="mt-0.5 font-bold {{ $m->aporte->fecha_limite->lt(today()) ? 'text-red-700' : 'text-sky-800' }}">Límite: {{ $m->aporte->fecha_limite->format('d/m/Y') }}</div>
+                                        @endif
                                     </td>
 
                                     <!-- Estado -->
@@ -178,21 +257,37 @@
                                     <!-- Acciones -->
                                     @if($esGestion)
                                         <td data-label="Acciones" class="py-4 px-6 text-center">
-                                            <div class="flex justify-center items-center gap-2">
+                                            <div class="flex flex-wrap justify-center items-center gap-2">
                                                 @if($m->estado === 'pendiente')
                                                     <!-- Botón Pagar: abre el modal para elegir QR o efectivo -->
                                                     <x-boton-pagar :accion="route('multas.pagar', $m)"
-                                                                   :concepto="'Multa – '.$m->tipo_multa.' – '.($m->socio->name ?? 'Socio')"
+                                                                   :concepto="$m->concepto.' – '.($m->socio->name ?? 'Socio')"
                                                                    :monto="'Bs. '.number_format((float) $m->monto, 2, ',', '.')">
                                                         Pagar
                                                     </x-boton-pagar>
                                                 @endif
 
+                                                @if($m->estado === 'pendiente')
+                                                    <!-- Condonar: se exime al socio (no se cobra ni se borra) -->
+                                                    <form action="{{ route('multas.condonar', $m) }}" method="POST" class="inline"
+                                                          onsubmit="return confirm('¿Condonar {{ $m->esAporte() ? 'esta cuota del aporte' : 'esta multa' }}? El socio ya no la deberá.')">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit" class="bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold px-3 py-1.5 rounded-lg text-xs transition-all shadow" title="Eximir al socio de este cobro">
+                                                            🔵 Condonar
+                                                        </button>
+                                                    </form>
+                                                @endif
+
+                                                @unless($m->esAporte())
+                                                    <a href="{{ route('multas.edit', $m) }}" class="bg-white border border-sky-300 hover:bg-sky-50 text-blue-900 font-bold px-3 py-1.5 rounded-lg text-xs transition-all shadow" title="Editar multa">✏️ Editar</a>
+                                                @endunless
+
                                                 <!-- Botón Eliminar -->
                                                 <form action="{{ route('multas.destroy', $m->id) }}" method="POST" class="inline">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" onclick="return confirm('¿Está seguro de eliminar esta multa? Esta acción no se puede deshacer.')" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1 shadow" title="Eliminar Multa">
+                                                    <button type="submit" onclick="return confirm('¿Está seguro de eliminar {{ $m->esAporte() ? 'esta cuota del aporte' : 'esta multa' }}? Esta acción no se puede deshacer.')" class="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1 shadow" title="Eliminar">
                                                         🗑️ Eliminar
                                                     </button>
                                                 </form>
@@ -203,7 +298,7 @@
                             @empty
                                 <tr>
                                     <td colspan="{{ $esGestion ? 6 : 5 }}" class="py-8 text-center text-gray-500 font-bold">
-                                        No se encontraron registros de multas.
+                                        No se encontraron multas ni aportes.
                                     </td>
                                 </tr>
                             @endforelse

@@ -23,7 +23,7 @@
                     <div>
                         <p class="text-sm font-bold text-sky-600 uppercase tracking-wider">Pendientes de Cobro Total</p>
                         <h3 class="text-3xl font-black text-amber-600 mt-1">Bs. {{ number_format($totalGeneralPorCobrar ?? 0, 2) }}</h3>
-                        <p class="text-xs font-bold text-gray-500 mt-1">Agua: Bs. {{ number_format($totalAguaPendiente ?? 0, 2) }} | Multas: Bs. {{ number_format($totalMultasPendientes ?? 0, 2) }}</p>
+                        <p class="text-xs font-bold text-gray-500 mt-1">Agua: Bs. {{ number_format($totalAguaPendiente ?? 0, 2) }} | Multas y aportes: Bs. {{ number_format($totalMultasPendientes ?? 0, 2) }}</p>
                     </div>
                     <div class="p-3 bg-amber-100 rounded-full text-amber-500">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,7 +118,7 @@
                             <span class="w-3 h-3 rounded-full bg-sky-600 inline-block shadow-sm"></span> Agua Cobrada
                         </span>
                         <span class="flex items-center gap-1.5 text-amber-800">
-                            <span class="w-3 h-3 rounded-full bg-amber-500 inline-block shadow-sm"></span> Multas Cobradas
+                            <span class="w-3 h-3 rounded-full bg-amber-500 inline-block shadow-sm"></span> Multas y Aportes Cobrados
                         </span>
                         <span class="flex items-center gap-1.5 text-emerald-800">
                             <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block shadow-sm"></span> Pendiente por Cobrar
@@ -152,7 +152,7 @@
                                 <th class="py-4 px-6">Socio / Afiliado</th>
                                 <th class="py-4 px-6 text-center">Meses</th>
                                 <th class="py-4 px-6 text-right">Monto Agua (Bs.)</th>
-                                <th class="py-4 px-6 text-right">Monto Multas (Bs.)</th>
+                                <th class="py-4 px-6 text-right">Multas y Aportes (Bs.)</th>
                                 <th class="py-4 px-6 text-right">Total Acumulado</th>
                                 <th class="py-4 px-6 text-center">Acción Recomendada</th>
                             </tr>
@@ -193,7 +193,7 @@
                                         Bs. {{ number_format($socio->deuda_agua, 2) }}
                                     </td>
 
-                                    <td data-label="Monto Multas (Bs.)" class="py-4 px-6 text-right font-extrabold text-amber-600">
+                                    <td data-label="Multas y Aportes (Bs.)" class="py-4 px-6 text-right font-extrabold text-amber-600">
                                         Bs. {{ number_format($socio->deuda_multas, 2) }}
                                     </td>
 
@@ -249,7 +249,7 @@
                 },
                 series: [
                     { name: 'Cobrado Agua', data: @json($datosAguaCobrada) },
-                    { name: 'Cobrado Multas', data: @json($datosMultasCobradas) },
+                    { name: 'Cobrado Multas y Aportes', data: @json($datosMultasCobradas) },
                     { name: 'Pendiente por Cobrar', data: @json($datosPendientes) }
                 ],
                 xaxis: { 

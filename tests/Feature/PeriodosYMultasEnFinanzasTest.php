@@ -179,7 +179,7 @@ class PeriodosYMultasEnFinanzasTest extends TestCase
         $csv = $this->actingAs($this->admin)->get('/finanzas/exportar')->streamedContent();
         $this->assertStringContainsString('Multas cobradas (Bs.)', $csv);
         // Agua (mayo es anterior al inicio del agua automática) ; multas ; otros ; total ; egresos ; saldo
-        $this->assertStringContainsString('0,00;80,00;1000,00;1080,00;100,00;980,00', $csv);
+        $this->assertStringContainsString('0,00;80,00;0,00;1000,00;1080,00;100,00;980,00', $csv);
     }
 
     public function test_editar_el_balance_conserva_lo_cobrado_por_multas(): void

@@ -81,7 +81,7 @@ class AvisoWhatsAppTest extends TestCase
 
         $mensaje = $this->mensajeEnviado($socio);
 
-        $this->assertStringContainsString('AVISO DE CORTE: tiene pendiente el pago de 3 meses de consumo de agua potable (Julio 2026, Agosto 2026 y Septiembre 2026) por Bs. 60,00 y multas por Bs. 30,00.', $mensaje);
+        $this->assertStringContainsString('AVISO DE CORTE: tiene pendiente el pago de 3 meses de consumo de agua potable (Julio 2026, Agosto 2026 y Septiembre 2026) por Bs. 60,00 y multas y aportes por Bs. 30,00.', $mensaje);
         $this->assertStringContainsString('Total adeudado: Bs. 90,00.', $mensaje);
         $this->assertStringContainsString('corresponde el corte del servicio de agua potable', $mensaje);
     }

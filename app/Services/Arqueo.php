@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Arqueo de caja de un mes: todo lo cobrado (agua y multas) según la fecha en que
+ * Arqueo de caja de un mes: todo lo cobrado (agua, multas y aportes) según la fecha en que
  * se cobró, separado por método de pago (QR / efectivo).
  */
 class Arqueo
@@ -61,8 +61,8 @@ class Arqueo
             ->get()
             ->map(fn (Multa $m) => (object) [
                 'fecha' => $m->fecha_pago,
-                'tipo' => 'multa',
-                'concepto' => "Multa – {$m->tipo_multa}",
+                'tipo' => $m->esAporte() ? 'aporte' : 'multa',
+                'concepto' => $m->concepto,
                 'socio' => $m->socio->name ?? '—',
                 'metodo' => $m->metodo_pago,
                 'cobrador' => $m->cobrador->name ?? '—',
@@ -73,14 +73,14 @@ class Arqueo
     }
 
     /**
-     * Totales por concepto (agua / multas) y método (qr / efectivo / sin especificar).
+     * Totales por concepto (agua / multas / aportes) y método (qr / efectivo / sin especificar).
      *
-     * @return array{agua: array, multa: array, total: array}
+     * @return array{agua: array, multa: array, aporte: array, total: array}
      */
     public function resumen(): array
     {
         $vacio = ['qr' => 0.0, 'efectivo' => 0.0, self::SIN_METODO => 0.0, 'total' => 0.0, 'cantidad' => 0];
-        $resumen = ['agua' => $vacio, 'multa' => $vacio, 'total' => $vacio];
+        $resumen = ['agua' => $vacio, 'multa' => $vacio, 'aporte' => $vacio, 'total' => $vacio];
 
         foreach ($this->cobros() as $cobro) {
             $metodo = $cobro->metodo?->value ?? self::SIN_METODO;

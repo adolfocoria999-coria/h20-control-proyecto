@@ -143,7 +143,7 @@ class HistorialTest extends TestCase
         $actividad = Actividad::sole();
         $this->assertSame('exportacion', $actividad->accion);
         $this->assertSame(Actividad::SECCION_USUARIO, $actividad->seccion);
-        $this->assertSame('Exportó sus multas a Excel', $actividad->descripcion);
+        $this->assertSame('Exportó sus multas y aportes a Excel', $actividad->descripcion);
     }
 
     // ---------- Consulta y filtros ----------

@@ -17,7 +17,7 @@
                 <div>
                     <a href="{{ route('finanzas.index') }}" class="text-xs font-bold text-blue-700 hover:underline print:hidden">← Volver a Finanzas</a>
                     <h2 class="font-extrabold text-3xl text-blue-950 leading-tight">Arqueo de Caja – {{ $periodo }}</h2>
-                    <p class="text-sm text-sky-900 mt-1 font-bold">Recaudación del mes por QR y en efectivo (agua y multas), según la fecha de cobro</p>
+                    <p class="text-sm text-sky-900 mt-1 font-bold">Recaudación del mes por QR y en efectivo (agua, multas y aportes), según la fecha de cobro</p>
                 </div>
                 <div class="mt-4 md:mt-0 flex flex-wrap gap-3 print:hidden">
                     <x-boton-pdf :href="route('arqueo.pdf', ['gestion' => $arqueo->gestion, 'mes' => $arqueo->mes])">Acta en PDF</x-boton-pdf>
@@ -91,7 +91,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-sky-100">
-                            @foreach(['agua' => '💧 Agua', 'multa' => '⚖️ Multas', 'total' => 'TOTAL'] as $clave => $nombre)
+                            @foreach(['agua' => '💧 Agua', 'multa' => '⚖️ Multas', 'aporte' => '🎉 Aportes', 'total' => 'TOTAL'] as $clave => $nombre)
                                 @php $fila = $resumen[$clave]; @endphp
                                 <tr class="{{ $clave === 'total' ? 'bg-sky-50 font-black' : 'font-bold' }} text-blue-950">
                                     <td data-label="Concepto" class="px-5 py-3">{{ $nombre }} <span class="text-xs font-semibold text-gray-500">({{ $fila['cantidad'] }})</span></td>

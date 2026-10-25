@@ -10,7 +10,7 @@
 
 @section('contenido')
     <h1>Acta de Arqueo de Caja</h1>
-    <div class="subtitulo">{{ $periodo }} · Cobros de agua y multas según la fecha de cobro</div>
+    <div class="subtitulo">{{ $periodo }} · Cobros de agua, multas y aportes según la fecha de cobro</div>
 
     <table class="tabla">
         <thead>
@@ -24,7 +24,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach(['agua' => 'Agua', 'multa' => 'Multas'] as $clave => $nombre)
+            @foreach(['agua' => 'Agua', 'multa' => 'Multas', 'aporte' => 'Aportes'] as $clave => $nombre)
                 <tr>
                     <td>{{ $nombre }}</td>
                     <td class="centro">{{ $resumen[$clave]['cantidad'] }}</td>

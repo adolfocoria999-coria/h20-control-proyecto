@@ -131,13 +131,19 @@ return [
         'titulo' => 'Mis multas',
         'roles' => ['socio'],
         'claves' => 'multa sancion multas inasistencia pagar multa',
-        'texto' => 'Menú → **Multas y Sanciones** muestra solo tus multas: motivo, monto, fecha y estado. Se pagan igual que el agua (QR o efectivo a Hacienda) y, una vez pagadas, tienen su recibo en PDF.',
+        'texto' => 'Menú → **Multas y Aportes** muestra solo tus multas y aportes: motivo, monto, fecha y estado. Se pagan igual que el agua (QR o efectivo a Hacienda) y, una vez pagadas, tienen su recibo en PDF.',
     ],
     [
         'titulo' => 'Finanzas de la OTB (transparencia)',
         'roles' => ['socio'],
         'claves' => 'finanzas balance ingresos gastos egresos caja cuentas transparencia',
         'texto' => 'Menú → **Finanzas**: puedes ver el balance de cada mes de la OTB (agua cobrada, multas, otros ingresos, egresos y saldo) y los comprobantes de respaldo.',
+    ],
+    [
+        'titulo' => 'Aportes (cuotas para actividades)',
+        'roles' => ['socio'],
+        'claves' => 'aporte aportes cuota cuotas aniversario mantenimiento material actividad colaboracion pagar aporte',
+        'texto' => 'Cuando la OTB necesita juntar dinero para una actividad (aniversario, mantenimiento, compra de material...), la directiva registra un **aporte**: te llega una **notificación** con la descripción, el monto y la fecha límite, y la cuota aparece en **Multas y Aportes** como 🎉 Aporte pendiente. Págala con el **QR** (en Mi Consumo) escribiendo en la glosa el nombre del aporte y tu nombre, y envía el comprobante por WhatsApp a Hacienda; o paga en efectivo. Cuando Hacienda confirma el pago, tienes tu recibo en PDF.',
     ],
     [
         'titulo' => 'Notificaciones de la directiva',
@@ -239,13 +245,19 @@ return [
         'titulo' => 'Multas: registrar, cobrar y condonar',
         'roles' => $gestion,
         'claves' => 'multa registrar multa masiva varios socios cobrar condonar perdonar',
-        'texto' => '**Multas y Sanciones** → **➕ Registrar Nueva Multa**: individual o **masiva** (marca varios socios), elige la tarifa o *Otro* con motivo. Para cobrar toca **Pagar** y elige QR o efectivo. Para condonarla, **Editar** → estado **🔵 Condonado**. Las multas cobradas se suman solas a Finanzas.',
+        'texto' => '**Multas y Aportes** → **➕ Registrar Nueva Multa**: individual o **masiva** (marca varios socios), elige la tarifa o *Otro* con motivo. Para cobrar toca **Pagar** y elige QR o efectivo. Para condonarla, toca **🔵 Condonar** en su fila (para cambiar otros datos usa **✏️ Editar**). Las multas cobradas se suman solas a Finanzas.',
+    ],
+    [
+        'titulo' => 'Aportes: cobrar una cuota a todos los socios',
+        'roles' => $gestion,
+        'claves' => 'aporte aportes cuota cuotas aniversario mantenimiento material actividad cobrar a todos colaboracion',
+        'texto' => '**Multas y Aportes** → **🎉 Nuevo aporte**: escribe la actividad (ej. *Aniversario de la OTB*), la descripción, el **monto por socio** y la **fecha límite**. Se le anota la cuota pendiente a **todos los socios** y, si dejas marcada la casilla, se les envía una **notificación** con cómo pagar. Arriba de la lista verás cada aporte con su avance (*45 de 60 socios pagaron, Bs. 900 de Bs. 1.200*) y el botón **⏳ Quién falta**. Cada cuota se cobra con **Pagar** (QR o efectivo), tiene recibo y se suma sola a Finanzas en la línea 🎉 Aportes. Para eximir a un socio (por ejemplo, un adulto mayor), toca **🔵 Condonar** en su cuota. Un aporte que nadie pagó todavía se puede eliminar con 🗑️.',
     ],
     [
         'titulo' => 'Tarifas de multas',
         'roles' => $gestion,
         'claves' => 'tarifa multa monto multa tipos de multa configurar',
-        'texto' => 'En **Multas y Sanciones** toca **⚙️ Tarifas de multas** para crear los tipos de multa con su monto predeterminado (por ejemplo, inasistencia a asamblea). Al registrar una multa se elige una de ellas.',
+        'texto' => 'En **Multas y Aportes** toca **⚙️ Tarifas de multas** para crear los tipos de multa con su monto predeterminado (por ejemplo, inasistencia a asamblea). Al registrar una multa se elige una de ellas.',
     ],
     [
         'titulo' => 'Finanzas: balance del mes',

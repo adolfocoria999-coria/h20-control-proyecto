@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Comunicado;
 use App\Models\User;
+use App\Services\Comunicar;
 use App\Services\Historial;
-use App\Services\NotificacionPush;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 /**
  * Notificaciones: la directiva (Hacienda y presidente) envía comunicados que
@@ -39,28 +38,10 @@ class MensajeController extends Controller
             'importante' => 'nullable|boolean',
         ], [], ['titulo' => 'título', 'mensaje' => 'mensaje']);
 
-        $comunicado = Comunicado::create([
-            'user_id' => $request->user()->id,
-            'titulo' => trim($datos['titulo']),
-            'mensaje' => trim($datos['mensaje']),
-            'importante' => $request->boolean('importante'),
-        ]);
-
-        $socios = User::socios()->get();
-
-        Historial::registrar('creado', 'mensajes',
-            'Envió la notificación "'.$comunicado->titulo.'" a '.$socios->count().' socio(s)', $comunicado);
-
-        // Aviso en el celular de los socios que lo activaron (después de responder)
-        defer(fn () => app(NotificacionPush::class)->enviar(
-            $socios,
-            ($comunicado->importante ? '⚠️ ' : '📢 ').$comunicado->titulo,
-            Str::limit($comunicado->mensaje, 120),
-            route('mensajes.index'),
-        ));
+        Comunicar::aTodos($request->user(), $datos['titulo'], $datos['mensaje'], $request->boolean('importante'));
 
         return redirect()->route('mensajes.index')
-            ->with('success', 'Notificación enviada ✓ Ya la pueden leer los '.$socios->count().' socios en "Notificaciones".');
+            ->with('success', 'Notificación enviada ✓ Ya la pueden leer los '.User::socios()->count().' socios en "Notificaciones".');
     }
 
     public function destroy(Comunicado $comunicado)

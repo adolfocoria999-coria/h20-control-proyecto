@@ -46,6 +46,9 @@
                             @if($balance->ingresos_multas > 0)
                                 <p class="mt-1.5 text-xs font-bold text-sky-800">➕ Además se suman automáticamente Bs. {{ number_format($balance->ingresos_multas, 2) }} de multas cobradas este mes.</p>
                             @endif
+                            @if($balance->ingresos_aportes > 0)
+                                <p class="mt-1.5 text-xs font-bold text-sky-800">🎉 Además se suman automáticamente Bs. {{ number_format($balance->ingresos_aportes, 2) }} de aportes cobrados este mes.</p>
+                            @endif
                         </div>
 
                         <!-- Egresos -->

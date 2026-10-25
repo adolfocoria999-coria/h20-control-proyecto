@@ -49,6 +49,7 @@ class ArqueoController extends Controller
             ['', '', "RESUMEN DEL ARQUEO – {$periodo}", '', '', '', ''],
             $fila('Agua', $resumen['agua']),
             $fila('Multas', $resumen['multa']),
+            $fila('Aportes', $resumen['aporte']),
             $fila('TOTAL RECAUDADO', $resumen['total']),
         ]);
         if ($arqueo->haySinMetodo()) {

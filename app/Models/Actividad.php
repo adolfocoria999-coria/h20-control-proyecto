@@ -45,7 +45,7 @@ class Actividad extends Model
         'sesion' => 'Sesión',
         'usuarios' => 'Socios',
         'lecturas' => 'Lecturas',
-        'multas' => 'Multas',
+        'multas' => 'Multas y aportes',
         'tarifas' => 'Tarifas de multas',
         'tarifa_agua' => 'Tarifa del agua',
         'finanzas' => 'Finanzas',

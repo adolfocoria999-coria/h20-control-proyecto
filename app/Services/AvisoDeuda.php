@@ -32,7 +32,7 @@ class AvisoDeuda
                 .' por '.self::bs($socio->deuda_agua);
         }
         if ($socio->deuda_multas > 0) {
-            $partes[] = 'multas por '.self::bs($socio->deuda_multas);
+            $partes[] = 'multas y aportes por '.self::bs($socio->deuda_multas);
         }
 
         $lineas = ["Sr(a). {$socio->name}, le saluda la {$otb}."];

@@ -48,14 +48,14 @@
                         </x-nav-link>
                     @endif
 
-                    <!-- 4. VISTAS COMPARTIDAS (Finanzas, Multas y Sanciones): no para el plomero -->
+                    <!-- 4. VISTAS COMPARTIDAS (Finanzas, Multas y Aportes): no para el plomero -->
                     @unless(Auth::user()->esPlomero())
                         <x-nav-link :href="route('finanzas.index')" :active="request()->routeIs('finanzas.*')">
                             {{ __('Finanzas') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('multas.index')" :active="request()->routeIs('multas.*')">
-                            {{ __('Multas y Sanciones') }}
+                            {{ __('Multas y Aportes') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('mensajes.index')" :active="request()->routeIs('mensajes.*')">
@@ -168,7 +168,7 @@
                 </x-responsive-nav-link>
 
                 <x-responsive-nav-link :href="route('multas.index')" :active="request()->routeIs('multas.*')">
-                    {{ __('Multas y Sanciones') }}
+                    {{ __('Multas y Aportes') }}
                 </x-responsive-nav-link>
 
                 <x-responsive-nav-link :href="route('mensajes.index')" :active="request()->routeIs('mensajes.*')">

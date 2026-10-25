@@ -94,12 +94,12 @@ class PagosDelSocio
         $tipo = $conFiltros ? $this->filtros['tipo'] : null;
 
         $agua = DB::table('lecturas')
-            ->selectRaw("'agua' as tipo, id, fecha_pago as fecha, metodo_pago, monto_pagado as monto, cobrado_por, mes, gestion, null as tipo_multa")
+            ->selectRaw("'agua' as tipo, id, fecha_pago as fecha, metodo_pago, monto_pagado as monto, cobrado_por, mes, gestion, null as tipo_multa, null as aporte_id")
             ->where('user_id', $this->socio->id)
             ->where('estado', Lectura::PAGADO);
 
         $multas = DB::table('multas')
-            ->selectRaw("'multa' as tipo, id, fecha_pago as fecha, metodo_pago, monto, cobrado_por, null as mes, null as gestion, tipo_multa")
+            ->selectRaw("'multa' as tipo, id, fecha_pago as fecha, metodo_pago, monto, cobrado_por, null as mes, null as gestion, tipo_multa, aporte_id")
             ->where('user_id', $this->socio->id)
             ->where('estado', Multa::PAGADO);
 
@@ -143,11 +143,11 @@ class PagosDelSocio
             'fecha' => Carbon::parse($fila->fecha),
             'concepto' => $fila->tipo === 'agua'
                 ? 'Agua – '.Meses::nombre((int) $fila->mes).' '.$fila->gestion
-                : 'Multa – '.$fila->tipo_multa,
+                : ($fila->aporte_id ? 'Aporte – ' : 'Multa – ').$fila->tipo_multa,
             'metodo' => $fila->metodo_pago ? MetodoPago::from($fila->metodo_pago) : null,
             'monto' => (float) $fila->monto,
             'registrado_por' => $cobradores[$fila->cobrado_por] ?? '—',
-            // Los pagos de agua guardan la hora; las multas, solo la fecha
+            // Los pagos de agua guardan la hora; las multas y aportes, solo la fecha
             'con_hora' => $fila->tipo === 'agua',
         ];
     }

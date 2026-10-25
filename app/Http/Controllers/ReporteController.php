@@ -62,7 +62,7 @@ class ReporteController extends Controller
 
         return CsvExporter::descargar(
             $nombre,
-            ['Socio / Afiliado', 'CI', 'Meses en Mora', 'Monto Agua (Bs.)', 'Monto Multas (Bs.)', 'Total Acumulado (Bs.)', 'Acción Recomendada'],
+            ['Socio / Afiliado', 'CI', 'Meses en Mora', 'Monto Agua (Bs.)', 'Multas y Aportes (Bs.)', 'Total Acumulado (Bs.)', 'Acción Recomendada'],
             $filas
         );
     }

@@ -149,7 +149,7 @@ class AguaEnFinanzasTest extends TestCase
 
         $csv = $this->actingAs($this->admin)->get('/finanzas/exportar')->streamedContent();
         $this->assertStringContainsString('Agua cobrada (Bs.)', $csv);
-        $this->assertStringContainsString('Octubre;2026;20,00;0,00;0,00;20,00;0,00;20,00', $csv);
+        $this->assertStringContainsString('Octubre;2026;20,00;0,00;0,00;0,00;20,00;0,00;20,00', $csv);
     }
 
     public function test_el_mes_de_inicio_se_puede_cambiar_en_los_ajustes(): void

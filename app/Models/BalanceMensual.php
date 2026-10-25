@@ -17,7 +17,7 @@ class BalanceMensual extends Model
     protected $table = 'balance_mensuals';
 
     // Calculados por el sistema: cambiarlos no es una acción del usuario
-    protected array $ignorarEnHistorial = ['ingresos_agua', 'ingresos_multas', 'saldo_final'];
+    protected array $ignorarEnHistorial = ['ingresos_agua', 'ingresos_multas', 'ingresos_aportes', 'saldo_final'];
 
     // Desde qué mes el agua cobrada se suma sola (clave en `ajustes`, formato AAAA-MM).
     // Antes de esa fecha el agua se cargaba a mano dentro de `ingresos`.
@@ -45,6 +45,7 @@ class BalanceMensual extends Model
             'ingresos' => 'decimal:2',
             'ingresos_agua' => 'decimal:2',
             'ingresos_multas' => 'decimal:2',
+            'ingresos_aportes' => 'decimal:2',
             'egresos' => 'decimal:2',
             'saldo_final' => 'decimal:2',
         ];
@@ -52,7 +53,7 @@ class BalanceMensual extends Model
 
     protected static function booted(): void
     {
-        // El saldo siempre se deriva de los ingresos (agua + multas + otros) y egresos
+        // El saldo siempre se deriva de los ingresos (agua + multas + aportes + otros) y egresos
         static::saving(function (BalanceMensual $balance) {
             $balance->saldo_final = $balance->ingresos_totales - (float) $balance->egresos;
         });
@@ -88,20 +89,22 @@ class BalanceMensual extends Model
     }
 
     /**
-     * Recalcula lo cobrado por multas en un mes a partir de las multas pagadas
-     * (no se edita a mano). Si el mes no tiene balance, lo crea.
+     * Recalcula lo cobrado por multas y por aportes en un mes a partir de los
+     * cobros pagados (no se edita a mano). Si el mes no tiene balance, lo crea.
      */
     public static function recalcularMultas(int $mes, int $gestion): void
     {
-        $total = (float) Multa::where('estado', Multa::PAGADO)
+        $cobrado = fn (bool $aportes) => (float) Multa::where('estado', Multa::PAGADO)
             ->whereYear('fecha_pago', $gestion)
             ->whereMonth('fecha_pago', $mes)
+            ->when($aportes, fn ($q) => $q->whereNotNull('aporte_id'), fn ($q) => $q->whereNull('aporte_id'))
             ->sum('monto');
 
-        self::fijarCobrado('ingresos_multas', $total, $mes, $gestion);
+        self::fijarCobrado('ingresos_multas', $cobrado(false), $mes, $gestion);
+        self::fijarCobrado('ingresos_aportes', $cobrado(true), $mes, $gestion);
     }
 
-    // Guarda lo cobrado (agua o multas) en el balance del mes; si no existe, lo crea
+    // Guarda lo cobrado (agua, multas o aportes) en el balance del mes; si no existe, lo crea
     private static function fijarCobrado(string $columna, float $total, int $mes, int $gestion): void
     {
         $balance = static::firstWhere(['mes' => $mes, 'gestion' => $gestion]);
@@ -123,10 +126,11 @@ class BalanceMensual extends Model
         $balance->save();
     }
 
-    // Agua cobrada + multas cobradas + otros ingresos (manuales)
+    // Agua cobrada + multas cobradas + aportes cobrados + otros ingresos (manuales)
     protected function ingresosTotales(): Attribute
     {
-        return Attribute::get(fn () => (float) $this->ingresos_agua + (float) $this->ingresos_multas + (float) $this->ingresos);
+        return Attribute::get(fn () => (float) $this->ingresos_agua + (float) $this->ingresos_multas
+            + (float) $this->ingresos_aportes + (float) $this->ingresos);
     }
 
     // En este mes el agua se suma sola (desde el mes de inicio)
@@ -160,7 +164,7 @@ class BalanceMensual extends Model
     protected function descripcionHistorial(string $accion): string
     {
         if ($accion === 'creado' && str_starts_with((string) $this->detalle, 'Registro creado automáticamente')) {
-            return 'Creó automáticamente '.$this->etiquetaHistorial().' por cobros de agua o multas';
+            return 'Creó automáticamente '.$this->etiquetaHistorial().' por cobros de agua, multas o aportes';
         }
 
         return Actividad::ACCIONES[$accion].' '.$this->etiquetaHistorial();

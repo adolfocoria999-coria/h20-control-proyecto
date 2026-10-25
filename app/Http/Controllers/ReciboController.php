@@ -37,16 +37,24 @@ class ReciboController extends Controller
     {
         $this->autorizar($request, $multa->user_id, $multa->estado === Multa::PAGADO);
 
-        $numero = 'MU-'.str_pad((string) $multa->id, 6, '0', STR_PAD_LEFT);
+        $numero = ($multa->esAporte() ? 'AP-' : 'MU-').str_pad((string) $multa->id, 6, '0', STR_PAD_LEFT);
         $socio = $multa->socio;
 
-        return $this->descargar($numero, $socio, $multa->fecha_pago, $multa->metodo_pago?->etiqueta(), $multa->cobrador?->name, (float) $multa->monto, [
-            'tipo' => "Multa – {$multa->tipo_multa}",
-            'detalle' => array_filter([
+        $detalle = $multa->esAporte()
+            ? [
+                'Aporte para' => $multa->tipo_multa,
+                'Descripción' => $multa->motivo,
+                'Fecha del aporte' => $multa->fecha_multa?->format('d/m/Y'),
+            ]
+            : [
                 'Tipo de multa' => $multa->tipo_multa,
                 'Motivo' => $multa->motivo,
                 'Fecha de la multa' => $multa->fecha_multa?->format('d/m/Y'),
-            ]),
+            ];
+
+        return $this->descargar($numero, $socio, $multa->fecha_pago, $multa->metodo_pago?->etiqueta(), $multa->cobrador?->name, (float) $multa->monto, [
+            'tipo' => $multa->concepto,
+            'detalle' => array_filter($detalle),
         ]);
     }
 
