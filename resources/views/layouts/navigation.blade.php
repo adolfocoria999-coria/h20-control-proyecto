@@ -5,14 +5,14 @@
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100 print:hidden">
     <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
-            <div class="flex">
+            <div class="flex flex-1">
                 <div class="shrink-0 flex items-center">
                     <a href="{{ Auth::user()->rutaInicio() }}">
                         <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
                     </a>
                 </div>
 
-                <div class="hidden space-x-5 2xl:space-x-8 xl:-my-px xl:ms-8 xl:flex">
+                <div class="hidden flex-1 justify-center space-x-5 2xl:space-x-8 xl:-my-px xl:mx-8 xl:flex">
                     
                     <!-- 1. VISTA EXCLUSIVA PARA SUPERADMIN -->
                     @if(Auth::user()->esSuperAdmin())
@@ -82,7 +82,7 @@
                 </div>
             </div>
 
-            <div class="hidden xl:flex xl:items-center xl:ms-6">
+            <div class="hidden xl:flex xl:items-center">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
