@@ -7,7 +7,7 @@
 
     <div class="py-12 min-h-screen" style="background-color: #bae6fd !important;" x-data="{ openQr: false }">
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <x-avisos-celular />
+            <x-avisos-celular automatico />
             
             <!-- ALERTA DE ÉXITO -->
             @if(session('success'))

@@ -1,4 +1,9 @@
-{{-- Activar notificaciones en este celular (Web Push). Siempre se muestra: si algo falta, lo explica. --}}
+{{--
+    Activar notificaciones en este celular (Web Push). Si algo falta, lo explica.
+    automatico: al entrar pide el permiso solo y, una vez activados, la tarjeta se oculta
+    (Mi Consumo). Sin él, la tarjeta queda siempre visible para probar o desactivar (Mi Perfil).
+--}}
+@props(['automatico' => false])
 @php
     try {
         $clavePublica = \App\Services\NotificacionPush::claves()['publicKey'];
@@ -22,7 +27,7 @@
 @endunless
 
 @if($clavePublica)
-    <div id="avisos-celular" class="p-4 sm:p-5 bg-white rounded-2xl shadow-md border border-sky-100">
+    <div id="avisos-celular" class="{{ $automatico ? 'hidden ' : '' }}p-4 sm:p-5 bg-white rounded-2xl shadow-md border border-sky-100">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
                 <p class="font-extrabold text-blue-950">🔔 Avisos en este celular</p>
@@ -46,6 +51,9 @@
             const encabezados = { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token };
             const esIphone = /iphone|ipad|ipod/i.test(navigator.userAgent);
             const enApp = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+
+            const automatico = @json($automatico);
+            const ocultar = () => caja.classList.add('hidden');
 
             const mostrar = (mensaje, botones) => {
                 texto.textContent = mensaje;
@@ -87,28 +95,46 @@
                 }
                 const registro = await servicio();
                 const suscripcion = await registro.pushManager.getSubscription();
+                if (suscripcion && automatico) return ocultar();
                 suscripcion
-                    ? mostrar('✅ Activados: te avisaremos en este celular cuando se registre tu lectura.', ['probar', 'desactivar'])
+                    ? mostrar('✅ Activados: te avisaremos en este celular cuando se registre tu lectura o la directiva envíe una notificación.', ['probar', 'desactivar'])
                     : mostrar('Recibe un aviso en este celular cuando se registre tu lectura de agua o la directiva envíe una notificación.', ['activar']);
             }
 
-            activar.addEventListener('click', async () => {
+            // Pide el permiso y registra este celular en el sistema. "solo" = sin que el usuario toque nada
+            async function activarAvisos(solo = false) {
                 activar.disabled = true;
                 try {
-                    if (await Notification.requestPermission() !== 'granted') return actualizar();
+                    if (await Notification.requestPermission() !== 'granted') return;
                     const registro = await servicio();
-                    const suscripcion = await registro.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: aBytes(clave) });
+                    const suscripcion = await registro.pushManager.getSubscription()
+                        || await registro.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: aBytes(clave) });
                     const respuesta = await fetch(@json(route('notificaciones.suscribir')), {
                         method: 'POST', credentials: 'same-origin', headers: encabezados, body: JSON.stringify(suscripcion.toJSON()),
                     });
                     if (!respuesta.ok) throw new Error('servidor');
                 } catch (error) {
-                    alert('No se pudieron activar los avisos. Revisa tu conexión e intenta de nuevo.');
+                    if (!solo) alert('No se pudieron activar los avisos. Revisa tu conexión e intenta de nuevo.');
                 } finally {
                     activar.disabled = false;
-                    actualizar();
+                    await actualizar().catch(() => {});
                 }
-            });
+            }
+
+            activar.addEventListener('click', () => activarAvisos());
+
+            // Al entrar: si nunca respondió, el celular pide el permiso (una vez por sesión, para no insistir);
+            // si ya lo dio pero este celular no está registrado (p. ej. reinstaló la app), lo registra sin preguntar
+            async function pedirAlEntrar() {
+                if (Notification.permission === 'granted') {
+                    const registro = await servicio();
+                    return (await registro.pushManager.getSubscription()) ? actualizar() : activarAvisos(true);
+                }
+                let yaPregunto = false;
+                try { yaPregunto = sessionStorage.getItem('h2o-avisos-preguntado') === '1'; sessionStorage.setItem('h2o-avisos-preguntado', '1'); } catch {}
+                if (Notification.permission === 'default' && !yaPregunto) return activarAvisos(true);
+                return actualizar();
+            }
 
             desactivar.addEventListener('click', async () => {
                 const suscripcion = await (await servicio()).pushManager.getSubscription();
@@ -128,8 +154,8 @@
                 if (!respuesta || !respuesta.ok) alert('No se pudo enviar la prueba. Desactiva y vuelve a activar los avisos.');
             });
 
-            mostrar('Preparando los avisos…', []);
-            actualizar().catch(() => mostrar('Este navegador no permite activar avisos todavía. Abre el sistema desde Chrome (o desde la app instalada) y vuelve a intentarlo.', []));
+            if (!automatico) mostrar('Preparando los avisos…', []);
+            (automatico ? pedirAlEntrar() : actualizar()).catch(() => mostrar('Este navegador no permite activar avisos todavía. Abre el sistema desde Chrome (o desde la app instalada) y vuelve a intentarlo.', []));
         })();
     </script>
 @endif
