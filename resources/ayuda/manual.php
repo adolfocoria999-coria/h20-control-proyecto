@@ -233,7 +233,7 @@ return [
         'titulo' => 'Enviar una notificación a todos los socios',
         'roles' => $gestion,
         'claves' => 'notificacion notificaciones mensaje mensajes comunicado comunicar avisar todos socios anuncio asamblea corte reunion',
-        'texto' => 'Menú → **Notificaciones**: escribe el **título** y el **mensaje** y toca **Enviar a todos los socios**. Marca **⚠️ Importante** para avisos urgentes (corte de agua, emergencia). Los socios la ven en su módulo Notificaciones con un número rojo en el menú y, si activaron los avisos, les llega una notificación al celular. Puedes **🗑 Eliminar** una notificación enviada por error.',
+        'texto' => 'Menú → **Notificaciones**: escribe el **título** y el **mensaje** y toca **Enviar a todos los socios**. Marca **⚠️ Emergencia** para avisos urgentes (por ejemplo, un corte de agua imprevisto): se ve con borde rojo. Los socios la ven en su módulo Notificaciones con un número rojo en el menú y, si activaron los avisos, les llega una notificación al celular. Puedes **🗑 Eliminar** una notificación enviada por error.',
     ],
     [
         'titulo' => 'Multas: registrar, cobrar y condonar',

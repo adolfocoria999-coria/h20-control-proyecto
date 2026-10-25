@@ -1,0 +1,6 @@
+# Configuración mínima de OpenSSL para crear claves (notificaciones en el celular).
+# Se usa cuando el servidor no tiene su propio openssl.cnf (p. ej. Wasmer).
+[ req ]
+distinguished_name = req_distinguished_name
+
+[ req_distinguished_name ]

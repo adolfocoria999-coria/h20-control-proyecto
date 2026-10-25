@@ -44,7 +44,7 @@
                         <label class="inline-flex items-center gap-2 text-sm font-bold text-blue-950 cursor-pointer">
                             <input type="checkbox" name="importante" value="1" @checked(old('importante'))
                                    class="rounded border-sky-300 text-red-600 focus:ring-red-500">
-                            ⚠️ Marcar como importante (corte de agua, emergencia...)
+                            ⚠️ Emergencia
                         </label>
                         <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-xl font-extrabold text-sm shadow-md">
                             Enviar a todos los socios

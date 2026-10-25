@@ -3,7 +3,7 @@
     $mensajesSinLeer = Auth::user()->esPlomero() ? 0 : \App\Models\Comunicado::sinLeer(Auth::user());
 @endphp
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-100 print:hidden">
-    <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex flex-1">
                 <div class="shrink-0 flex items-center">
