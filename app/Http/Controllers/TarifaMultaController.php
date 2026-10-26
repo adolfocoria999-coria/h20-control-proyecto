@@ -19,7 +19,7 @@ class TarifaMultaController extends Controller
         TarifaMulta::create($request->validated());
 
         return redirect()->route('tarifas-multas.index')
-            ->with('success', '¡Tipo de multa creada correctamente!');
+            ->with('success', 'Tarifa «'.$request->validated('nombre').'» creada ✓');
     }
 
     public function update(TarifaMultaRequest $request, TarifaMulta $tarifas_multa)
@@ -27,7 +27,7 @@ class TarifaMultaController extends Controller
         $tarifas_multa->update($request->validated());
 
         return redirect()->route('tarifas-multas.index')
-            ->with('success', '¡Tarifa/Multa actualizada correctamente!');
+            ->with('success', 'Tarifa «'.$tarifas_multa->nombre.'» actualizada ✓');
     }
 
     public function destroy(TarifaMulta $tarifas_multa)
@@ -35,6 +35,6 @@ class TarifaMultaController extends Controller
         $tarifas_multa->delete();
 
         return redirect()->route('tarifas-multas.index')
-            ->with('success', 'Tarifa eliminada con éxito.');
+            ->with('success', 'Tarifa «'.$tarifas_multa->nombre.'» eliminada.');
     }
 }

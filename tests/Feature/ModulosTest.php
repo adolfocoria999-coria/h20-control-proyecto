@@ -233,6 +233,35 @@ class ModulosTest extends TestCase
 
         $tarifa = TarifaMulta::where('nombre', 'Daño a la red')->sole();
         $this->assertEquals(150, $tarifa->monto_predeterminado);
+
+        // La pantalla permite editar y eliminar cada tarifa
+        $this->actingAs($this->admin)->get('/tarifas-multas')
+            ->assertSee(route('tarifas-multas.update', $tarifa))
+            ->assertSee(route('tarifas-multas.destroy', $tarifa))
+            ->assertSee('✏️ Editar');
+
+        $multa = Multa::factory()->for($this->socio, 'socio')->create(['tarifa_multa_id' => $tarifa->id, 'tipo_multa' => 'Daño a la red', 'monto' => 150]);
+
+        $this->actingAs($this->admin)->put("/tarifas-multas/{$tarifa->id}", [
+            'nombre' => 'Daño a la red de agua', 'monto_predeterminado' => 200,
+        ])->assertRedirect(route('tarifas-multas.index'))->assertSessionHas('success', 'Tarifa «Daño a la red de agua» actualizada ✓');
+        $this->assertEquals(200, $tarifa->fresh()->monto_predeterminado);
+        $this->assertSame('Daño a la red de agua', $tarifa->fresh()->nombre);
+
+        $this->actingAs($this->admin)->put("/tarifas-multas/{$tarifa->id}", ['nombre' => '', 'monto_predeterminado' => -5])
+            ->assertSessionHasErrors(['nombre', 'monto_predeterminado']);
+
+        $this->actingAs($this->socio)->put("/tarifas-multas/{$tarifa->id}", ['nombre' => 'X', 'monto_predeterminado' => 1])->assertForbidden();
+
+        $this->actingAs($this->admin)->delete("/tarifas-multas/{$tarifa->id}")->assertRedirect(route('tarifas-multas.index'));
+        $this->assertNull(TarifaMulta::find($tarifa->id));
+
+        // Las multas ya registradas conservan su nombre y monto
+        $multa->refresh();
+        $this->assertNull($multa->tarifa_multa_id);
+        $this->assertSame('Daño a la red', $multa->tipo_multa);
+        $this->assertEquals(150, $multa->monto);
+
     }
 
     public function test_dar_de_baja_a_un_socio_conserva_su_historial(): void

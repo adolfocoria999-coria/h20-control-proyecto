@@ -3,27 +3,29 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <!-- Encabezado y Acciones -->
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+            <!-- Título arriba; los botones en una sola fila debajo, todos del mismo alto -->
+            @php $boton = 'h-12 inline-flex items-center justify-center gap-2 whitespace-nowrap px-5 rounded-xl font-extrabold text-sm shadow-md transition-colors'; @endphp
+            <div class="mb-8 space-y-4">
                 <div>
                     <h1 class="text-3xl font-black text-blue-950">Multas y Aportes</h1>
                     <p class="text-sm font-bold text-sky-800">Multas por infracciones y aportes para actividades de la OTB (aniversario, mantenimiento, compras...).</p>
                 </div>
 
-                <div class="flex flex-wrap gap-2">
-                    <!-- Botón Exportar a Excel/CSV -->
-                    <x-boton-excel :href="route('multas.exportar', request()->query())" />
-
+                <div class="flex flex-wrap items-center gap-3">
                     @if($esGestion)
-                        <a href="{{ route('tarifas-multas.index') }}" class="bg-white hover:bg-sky-50 text-blue-900 border-2 border-blue-200 font-extrabold px-5 py-3 rounded-xl shadow-md transition-all text-sm flex items-center gap-2">
-                            ⚙️ Tarifas de multas
-                        </a>
-                        <a href="{{ route('multas.create') }}" class="bg-blue-700 hover:bg-blue-800 text-white font-extrabold px-5 py-3 rounded-xl shadow-lg transition-all text-sm flex items-center gap-2">
+                        <a href="{{ route('multas.create') }}" class="{{ $boton }} bg-blue-700 hover:bg-blue-800 text-white">
                             ➕ Registrar Nueva Multa
                         </a>
-                        <a href="{{ route('aportes.create') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-5 py-3 rounded-xl shadow-lg transition-all text-sm flex items-center gap-2">
+                        <a href="{{ route('aportes.create') }}" class="{{ $boton }} bg-violet-600 hover:bg-violet-700 text-white">
                             🎉 Nuevo aporte
                         </a>
+                        <a href="{{ route('tarifas-multas.index') }}" class="{{ $boton }} bg-white hover:bg-sky-50 text-blue-900 border-2 border-blue-200">
+                            ⚙️ Tarifas de multas
+                        </a>
                     @endif
+
+                    <!-- Botón Exportar a Excel/CSV -->
+                    <x-boton-excel :href="route('multas.exportar', request()->query())" class="h-12 py-0" />
                 </div>
             </div>
 
