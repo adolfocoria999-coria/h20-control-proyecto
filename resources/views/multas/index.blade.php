@@ -164,7 +164,7 @@
                     @endif
 
                     <div class="flex items-end gap-2">
-                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-all w-full">
+                        <button type="submit" class="bg-blue-900 hover:bg-blue-950 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-all w-full">
                             🔍 Filtrar
                         </button>
                         <a href="{{ route('multas.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-2.5 rounded-xl text-xs transition-all text-center">
@@ -179,7 +179,7 @@
                 <div class="overflow-x-auto">
                     <table class="tabla-responsiva w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-sky-900 text-white text-xs uppercase tracking-wider font-extrabold">
+                            <tr class="bg-blue-900 text-white text-xs uppercase tracking-wider font-extrabold">
                                 <th class="py-4 px-6">Socio / Afiliado</th>
                                 <th class="py-4 px-6">Concepto / Motivo</th>
                                 <th class="py-4 px-6 text-center">Monto (Bs.)</th>

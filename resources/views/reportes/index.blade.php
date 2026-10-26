@@ -93,7 +93,7 @@
                     </div>
 
                     <div class="flex gap-2">
-                        <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition-all w-full flex justify-center items-center gap-1 shadow-md">
+                        <button type="submit" class="bg-blue-900 hover:bg-blue-950 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition-all w-full flex justify-center items-center gap-1 shadow-md">
                             🔍 Filtrar
                         </button>
                         <a href="{{ route('reportes.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-2.5 rounded-xl text-xs transition-all flex items-center justify-center">
@@ -115,7 +115,7 @@
                     
                     <div class="flex flex-wrap items-center gap-3 text-xs font-extrabold bg-sky-50 p-2.5 rounded-xl border border-sky-100">
                         <span class="flex items-center gap-1.5 text-sky-900">
-                            <span class="w-3 h-3 rounded-full bg-sky-600 inline-block shadow-sm"></span> Agua Cobrada
+                            <span class="w-3 h-3 rounded-full bg-blue-900 inline-block shadow-sm"></span> Agua Cobrada
                         </span>
                         <span class="flex items-center gap-1.5 text-amber-800">
                             <span class="w-3 h-3 rounded-full bg-amber-500 inline-block shadow-sm"></span> Multas y Aportes Cobrados
@@ -148,7 +148,7 @@
                 <div class="overflow-x-auto">
                     <table class="tabla-responsiva w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-sky-900 text-white text-xs uppercase tracking-wider font-extrabold">
+                            <tr class="bg-blue-900 text-white text-xs uppercase tracking-wider font-extrabold">
                                 <th class="py-4 px-6">Socio / Afiliado</th>
                                 <th class="py-4 px-6 text-center">Meses</th>
                                 <th class="py-4 px-6 text-right">Monto Agua (Bs.)</th>
@@ -275,7 +275,8 @@
                         }
                     }
                 },
-                colors: ['#0284c7', '#f59e0b', '#10b981'],
+                colors: ['#1e3a8a', '#f59e0b', '#10b981'],
+                fill: { opacity: 1 }, // colores sólidos (mismo azul que la barra de navegación)
                 plotOptions: { 
                     bar: { 
                         horizontal: false, 
