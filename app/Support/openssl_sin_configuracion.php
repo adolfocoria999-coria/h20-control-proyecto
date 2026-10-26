@@ -44,10 +44,11 @@ namespace App\Support {
             return \openssl_pkey_export($clave, $salida, $frase, ($opciones ?? []) + ['config' => self::archivo()]);
         }
 
+        // Descarta los errores del primer intento. Con tope: en algunos servidores
+        // (Wasmer) la cola de errores podría no vaciarse nunca y colgar la petición.
         private static function limpiarErrores(): void
         {
-            while (\openssl_error_string() !== false) {
-                // Descarta los errores del primer intento
+            for ($i = 0; $i < 50 && \openssl_error_string() !== false; $i++) {
             }
         }
     }

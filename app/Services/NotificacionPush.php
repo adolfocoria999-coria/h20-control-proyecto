@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Ajuste;
 use App\Models\SuscripcionPush;
 use App\Models\User;
+use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\VAPID;
@@ -101,7 +102,12 @@ class NotificacionPush
      */
     protected function despachar(array $envios): array
     {
-        $webPush = new WebPush(['VAPID' => self::claves() + ['subject' => config('app.url')]], ['TTL' => 86400]);
+        // Con tiempo límite: sin él, si Google/Mozilla no responden, la petición queda colgada para siempre
+        $webPush = new WebPush(
+            ['VAPID' => self::claves() + ['subject' => config('app.url')]],
+            ['TTL' => 86400],
+            new Client(['connect_timeout' => 5, 'timeout' => 10]),
+        );
 
         foreach ($envios as [$suscripcion, $contenido]) {
             $webPush->queueNotification(Subscription::create([
