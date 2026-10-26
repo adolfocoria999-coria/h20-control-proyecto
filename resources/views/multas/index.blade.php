@@ -12,20 +12,20 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
+                    <!-- Botón Exportar a Excel/CSV -->
+                    <x-boton-excel :href="route('multas.exportar', request()->query())" class="h-12 py-0" />
+
                     @if($esGestion)
-                        <a href="{{ route('multas.create') }}" class="{{ $boton }} bg-blue-700 hover:bg-blue-800 text-white">
-                            ➕ Registrar Nueva Multa
+                        <a href="{{ route('tarifas-multas.index') }}" class="{{ $boton }} bg-white hover:bg-sky-50 text-blue-900 border-2 border-blue-200">
+                            ⚙️ Tarifas de multas
                         </a>
                         <a href="{{ route('aportes.create') }}" class="{{ $boton }} bg-violet-600 hover:bg-violet-700 text-white">
                             🎉 Nuevo aporte
                         </a>
-                        <a href="{{ route('tarifas-multas.index') }}" class="{{ $boton }} bg-white hover:bg-sky-50 text-blue-900 border-2 border-blue-200">
-                            ⚙️ Tarifas de multas
+                        <a href="{{ route('multas.create') }}" class="{{ $boton }} bg-blue-700 hover:bg-blue-800 text-white">
+                            ➕ Registrar Nueva Multa
                         </a>
                     @endif
-
-                    <!-- Botón Exportar a Excel/CSV -->
-                    <x-boton-excel :href="route('multas.exportar', request()->query())" class="h-12 py-0" />
                 </div>
             </div>
 

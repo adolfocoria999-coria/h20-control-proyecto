@@ -7,6 +7,12 @@
     display: none !important;
 }
 
+/* Edge agrega su propio "ojito" a las contraseñas: se oculta porque el sistema ya tiene el suyo */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
 /*
  * Tablas responsivas: en pantallas angostas cada fila se muestra como una tarjeta
  * y cada celda como "ETIQUETA ......... valor". La etiqueta sale del atributo
