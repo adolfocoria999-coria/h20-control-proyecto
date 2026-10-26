@@ -73,15 +73,15 @@
             </div>
 
             <!-- FILTROS (se aplican en el servidor para poder paginar) -->
-            <form method="GET" action="{{ route('lecturas.index') }}" class="mb-4">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <form method="GET" action="{{ route('lecturas.index') }}" class="filtros mb-4">
+                <div class="filtros-campos lg:grid-cols-4">
                     <div>
-                        <label for="socio" class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">Socio / C.I.</label>
-                        <input type="text" name="socio" id="socio" value="{{ request('socio') }}" placeholder="🔍 Nombre o carnet..." class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50">
+                        <label for="socio" class="filtro-etiqueta">Socio / C.I.</label>
+                        <input type="text" name="socio" id="socio" value="{{ request('socio') }}" placeholder="🔍 Nombre o carnet..." class="filtro-campo">
                     </div>
                     <div>
-                        <label for="mes" class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">Mes</label>
-                        <select name="mes" id="mes" onchange="this.form.submit()" class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50 cursor-pointer">
+                        <label for="mes" class="filtro-etiqueta">Mes</label>
+                        <select name="mes" id="mes" onchange="this.form.submit()" class="filtro-campo">
                             <option value="">Todos los meses</option>
                             @foreach(\App\Support\Meses::NOMBRES as $num => $nombre)
                                 <option value="{{ $num }}" {{ $mes == $num ? 'selected' : '' }}>{{ $nombre }}</option>
@@ -89,8 +89,8 @@
                         </select>
                     </div>
                     <div>
-                        <label for="gestion" class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">Gestión</label>
-                        <select name="gestion" id="gestion" onchange="this.form.submit()" class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50 cursor-pointer">
+                        <label for="gestion" class="filtro-etiqueta">Gestión</label>
+                        <select name="gestion" id="gestion" onchange="this.form.submit()" class="filtro-campo">
                             <option value="">Todas las gestiones</option>
                             @foreach($gestiones as $anio)
                                 <option value="{{ $anio }}" {{ $gestion == $anio ? 'selected' : '' }}>{{ $anio }}</option>
@@ -98,18 +98,18 @@
                         </select>
                     </div>
                     <div>
-                        <label for="estado" class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">Estado del Pago</label>
-                        <select name="estado" id="estado" onchange="this.form.submit()" class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50 cursor-pointer">
+                        <label for="estado" class="filtro-etiqueta">Estado del Pago</label>
+                        <select name="estado" id="estado" onchange="this.form.submit()" class="filtro-campo">
                             <option value="">Todos los estados</option>
                             <option value="pendiente" {{ request('estado') === 'pendiente' ? 'selected' : '' }}>Pendientes</option>
                             <option value="pagado" {{ request('estado') === 'pagado' ? 'selected' : '' }}>Pagados</option>
                         </select>
                     </div>
                 </div>
-                <div class="flex items-center gap-3 mt-3">
-                    <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2.5 rounded-xl font-extrabold text-sm shadow-md transition-all">🔍 Buscar</button>
+                <div class="filtros-acciones">
+                    <button type="submit" class="filtro-boton">🔍 Buscar</button>
                     @if(request('socio') || request('mes') || request('gestion') || request('estado'))
-                        <a href="{{ route('lecturas.index') }}" class="text-xs font-bold text-red-500 hover:underline">Limpiar filtros</a>
+                        <a href="{{ route('lecturas.index') }}" class="filtro-limpiar">Limpiar filtros</a>
                     @endif
                 </div>
             </form>

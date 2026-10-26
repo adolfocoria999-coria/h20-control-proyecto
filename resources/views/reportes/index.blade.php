@@ -62,46 +62,33 @@
             </div>
 
             <!-- Filtro de Búsqueda -->
-            <div class="bg-white p-6 rounded-2xl border border-sky-100 shadow-md mb-8">
-                <form method="GET" action="{{ route('reportes.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <form method="GET" action="{{ route('reportes.index') }}" class="filtros mb-8">
+                <div class="filtros-campos lg:grid-cols-2">
                     <div>
-                        <label class="block text-xs font-bold text-blue-950 mb-1">Filtrar por Mes:</label>
-                        <select name="mes" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-2.5 font-bold text-xs text-blue-950 focus:ring-2 focus:ring-blue-500 transition-all">
-                            <option value="">-- Todos los Meses --</option>
-                            <option value="1" {{ request('mes') == '1' ? 'selected' : '' }}>Enero</option>
-                            <option value="2" {{ request('mes') == '2' ? 'selected' : '' }}>Febrero</option>
-                            <option value="3" {{ request('mes') == '3' ? 'selected' : '' }}>Marzo</option>
-                            <option value="4" {{ request('mes') == '4' ? 'selected' : '' }}>Abril</option>
-                            <option value="5" {{ request('mes') == '5' ? 'selected' : '' }}>Mayo</option>
-                            <option value="6" {{ request('mes') == '6' ? 'selected' : '' }}>Junio</option>
-                            <option value="7" {{ request('mes') == '7' ? 'selected' : '' }}>Julio</option>
-                            <option value="8" {{ request('mes') == '8' ? 'selected' : '' }}>Agosto</option>
-                            <option value="9" {{ request('mes') == '9' ? 'selected' : '' }}>Septiembre</option>
-                            <option value="10" {{ request('mes') == '10' ? 'selected' : '' }}>Octubre</option>
-                            <option value="11" {{ request('mes') == '11' ? 'selected' : '' }}>Noviembre</option>
-                            <option value="12" {{ request('mes') == '12' ? 'selected' : '' }}>Diciembre</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-blue-950 mb-1">Gestión / Año:</label>
-                        <select name="gestion" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-2.5 font-bold text-xs text-blue-950 focus:ring-2 focus:ring-blue-500 transition-all">
-                            @foreach($gestiones as $anio)
-                                <option value="{{ $anio }}" {{ $gestion == $anio ? 'selected' : '' }}>Gestión {{ $anio }}</option>
+                        <label for="mes" class="filtro-etiqueta">Mes</label>
+                        <select name="mes" id="mes" onchange="this.form.submit()" class="filtro-campo">
+                            <option value="">Todos los meses</option>
+                            @foreach(\App\Support\Meses::NOMBRES as $num => $nombre)
+                                <option value="{{ $num }}" {{ request('mes') == $num ? 'selected' : '' }}>{{ $nombre }}</option>
                             @endforeach
                         </select>
                     </div>
-
-                    <div class="flex gap-2">
-                        <button type="submit" class="bg-blue-900 hover:bg-blue-950 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition-all w-full flex justify-center items-center gap-1 shadow-md">
-                            🔍 Filtrar
-                        </button>
-                        <a href="{{ route('reportes.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-2.5 rounded-xl text-xs transition-all flex items-center justify-center">
-                            Limpiar
-                        </a>
+                    <div>
+                        <label for="gestion" class="filtro-etiqueta">Gestión</label>
+                        <select name="gestion" id="gestion" onchange="this.form.submit()" class="filtro-campo">
+                            @foreach($gestiones as $anio)
+                                <option value="{{ $anio }}" {{ $gestion == $anio ? 'selected' : '' }}>{{ $anio }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                </form>
-            </div>
+                </div>
+                <div class="filtros-acciones">
+                    <button type="submit" class="filtro-boton">🔍 Buscar</button>
+                    @if(request('mes') || request('gestion'))
+                        <a href="{{ route('reportes.index') }}" class="filtro-limpiar">Limpiar filtros</a>
+                    @endif
+                </div>
+            </form>
 
             <!-- GRÁFICO CON BARRAS VERDES PARA PENDIENTE POR COBRAR -->
             <div class="bg-white rounded-2xl border border-sky-100 shadow-xl overflow-hidden mb-8 p-6">

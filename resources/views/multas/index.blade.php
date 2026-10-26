@@ -132,47 +132,42 @@
             @endif
 
             <!-- Filtros de Búsqueda -->
-            <div class="bg-white p-6 rounded-2xl border border-sky-100 shadow-md mb-8">
-                <form method="GET" action="{{ route('multas.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    @if(request('aporte'))
-                        <input type="hidden" name="aporte" value="{{ request('aporte') }}">
-                    @endif
+            <form method="GET" action="{{ route('multas.index') }}" class="filtros mb-8">
+                @if(request('aporte'))
+                    <input type="hidden" name="aporte" value="{{ request('aporte') }}">
+                @endif
+                <div class="filtros-campos {{ $esGestion ? 'lg:grid-cols-3' : 'lg:grid-cols-2' }}">
                     <div>
-                        <label class="block text-xs font-bold text-blue-950 mb-1">Tipo:</label>
-                        <select name="tipo" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-2.5 font-bold text-xs text-blue-950 focus:ring-2 focus:ring-blue-500">
-                            <option value="">-- Multas y aportes --</option>
+                        <label for="tipo" class="filtro-etiqueta">Tipo</label>
+                        <select name="tipo" id="tipo" onchange="this.form.submit()" class="filtro-campo">
+                            <option value="">Multas y aportes</option>
                             <option value="multas" {{ request('tipo') === 'multas' ? 'selected' : '' }}>⚖️ Solo multas</option>
                             <option value="aportes" {{ request('tipo') === 'aportes' ? 'selected' : '' }}>🎉 Solo aportes</option>
                         </select>
                     </div>
-
                     <div>
-                        <label class="block text-xs font-bold text-blue-950 mb-1">Estado de Pago:</label>
-                        <select name="estado" class="w-full bg-sky-50 border border-sky-200 rounded-xl p-2.5 font-bold text-xs text-blue-950 focus:ring-2 focus:ring-blue-500">
-                            <option value="">-- Todos los Estados --</option>
-                            <option value="pendiente" {{ request('estado') === 'pendiente' ? 'selected' : '' }}>Pendiente</option>
-                            <option value="pagado" {{ request('estado') === 'pagado' ? 'selected' : '' }}>Pagado</option>
-                            <option value="condonado" {{ request('estado') === 'condonado' ? 'selected' : '' }}>Condonado</option>
+                        <label for="estado" class="filtro-etiqueta">Estado del Pago</label>
+                        <select name="estado" id="estado" onchange="this.form.submit()" class="filtro-campo">
+                            <option value="">Todos los estados</option>
+                            <option value="pendiente" {{ request('estado') === 'pendiente' ? 'selected' : '' }}>Pendientes</option>
+                            <option value="pagado" {{ request('estado') === 'pagado' ? 'selected' : '' }}>Pagados</option>
+                            <option value="condonado" {{ request('estado') === 'condonado' ? 'selected' : '' }}>Condonados</option>
                         </select>
                     </div>
-
                     @if($esGestion)
                         <div>
-                            <label class="block text-xs font-bold text-blue-950 mb-1">Buscar Socio:</label>
-                            <input type="text" name="buscar" value="{{ request('buscar') }}" placeholder="Nombre o Correo del socio..." class="w-full bg-sky-50 border border-sky-200 rounded-xl p-2.5 font-bold text-xs text-blue-950 focus:ring-2 focus:ring-blue-500">
+                            <label for="buscar" class="filtro-etiqueta">Socio</label>
+                            <input type="text" name="buscar" id="buscar" value="{{ request('buscar') }}" placeholder="🔍 Nombre o correo del socio..." class="filtro-campo">
                         </div>
                     @endif
-
-                    <div class="flex items-end gap-2">
-                        <button type="submit" class="bg-blue-900 hover:bg-blue-950 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-all w-full">
-                            🔍 Filtrar
-                        </button>
-                        <a href="{{ route('multas.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-2.5 rounded-xl text-xs transition-all text-center">
-                            Limpiar
-                        </a>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="filtros-acciones">
+                    <button type="submit" class="filtro-boton">🔍 Buscar</button>
+                    @if(request('tipo') || request('estado') || request('buscar') || request('aporte'))
+                        <a href="{{ route('multas.index') }}" class="filtro-limpiar">Limpiar filtros</a>
+                    @endif
+                </div>
+            </form>
 
             <!-- Tabla de Multas -->
             <div class="bg-white rounded-2xl border border-sky-100 shadow-xl overflow-hidden">

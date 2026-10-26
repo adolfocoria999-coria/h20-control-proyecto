@@ -27,11 +27,11 @@
             </div>
 
             <!-- Filtros -->
-            <form method="GET" action="{{ route('socio.pagos') }}" class="bg-white p-5 rounded-2xl shadow-md border border-sky-100">
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <form method="GET" action="{{ route('socio.pagos') }}" class="filtros">
+                <div class="filtros-campos lg:grid-cols-4">
                     <div>
-                        <label for="gestion" class="{{ $label }}">Año</label>
-                        <select name="gestion" id="gestion" onchange="this.form.submit()" class="{{ $input }}">
+                        <label for="gestion" class="filtro-etiqueta">Año</label>
+                        <select name="gestion" id="gestion" onchange="this.form.submit()" class="filtro-campo">
                             <option value="todas" {{ $filtros['gestion'] === null ? 'selected' : '' }}>Todos los años</option>
                             @foreach($gestiones as $anio)
                                 <option value="{{ $anio }}" {{ $filtros['gestion'] === $anio ? 'selected' : '' }}>{{ $anio }}</option>
@@ -39,8 +39,8 @@
                         </select>
                     </div>
                     <div>
-                        <label for="mes" class="{{ $label }}">Mes</label>
-                        <select name="mes" id="mes" onchange="this.form.submit()" class="{{ $input }}" @disabled($filtros['gestion'] === null)>
+                        <label for="mes" class="filtro-etiqueta">Mes</label>
+                        <select name="mes" id="mes" onchange="this.form.submit()" class="filtro-campo" @disabled($filtros['gestion'] === null)>
                             <option value="">Todos los meses</option>
                             @foreach(Meses::NOMBRES as $num => $nombre)
                                 <option value="{{ $num }}" {{ $filtros['mes'] === $num ? 'selected' : '' }}>{{ $nombre }}</option>
@@ -48,8 +48,8 @@
                         </select>
                     </div>
                     <div>
-                        <label for="metodo" class="{{ $label }}">Método</label>
-                        <select name="metodo" id="metodo" onchange="this.form.submit()" class="{{ $input }}">
+                        <label for="metodo" class="filtro-etiqueta">Método</label>
+                        <select name="metodo" id="metodo" onchange="this.form.submit()" class="filtro-campo">
                             <option value="">QR y efectivo</option>
                             @foreach(MetodoPago::cases() as $metodo)
                                 <option value="{{ $metodo->value }}" {{ $filtros['metodo'] === $metodo->value ? 'selected' : '' }}>{{ $metodo->icono() }} {{ $metodo->etiqueta() }}</option>
@@ -57,15 +57,17 @@
                         </select>
                     </div>
                     <div>
-                        <label for="tipo" class="{{ $label }}">Concepto</label>
-                        <select name="tipo" id="tipo" onchange="this.form.submit()" class="{{ $input }}">
-                            <option value="">Agua y multas</option>
+                        <label for="tipo" class="filtro-etiqueta">Concepto</label>
+                        <select name="tipo" id="tipo" onchange="this.form.submit()" class="filtro-campo">
+                            <option value="">Agua, multas y aportes</option>
                             <option value="agua" {{ $filtros['tipo'] === 'agua' ? 'selected' : '' }}>💧 Agua</option>
-                            <option value="multa" {{ $filtros['tipo'] === 'multa' ? 'selected' : '' }}>⚖️ Multas</option>
+                            <option value="multa" {{ $filtros['tipo'] === 'multa' ? 'selected' : '' }}>⚖️ Multas y aportes</option>
                         </select>
                     </div>
                 </div>
-                <noscript><button type="submit" class="mt-4 bg-blue-700 text-white px-5 py-2.5 rounded-xl font-extrabold text-sm">Filtrar</button></noscript>
+                <div class="filtros-acciones">
+                    <button type="submit" class="filtro-boton">🔍 Buscar</button>
+                </div>
             </form>
 
             <!-- Totales del periodo -->

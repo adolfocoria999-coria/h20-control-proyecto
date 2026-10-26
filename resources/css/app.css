@@ -7,6 +7,39 @@
     display: none !important;
 }
 
+/*
+ * Filtros de los módulos: el mismo estilo en todos (el de Socios).
+ * Campos en fila y el botón Buscar a la derecha, alineado con las casillas.
+ *   <form class="filtros"> <div class="filtros-campos lg:grid-cols-N"> ... </div>
+ *     <div class="filtros-acciones"> <button class="filtro-boton"> <a class="filtro-limpiar"> </div> </form>
+ */
+@layer components {
+    .filtros {
+        @apply flex flex-col lg:flex-row lg:items-end gap-4;
+    }
+    .filtros-campos {
+        @apply grid flex-1 grid-cols-1 sm:grid-cols-2 gap-4;
+    }
+    .filtro-etiqueta {
+        @apply block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1;
+    }
+    .filtro-campo {
+        @apply w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50;
+    }
+    select.filtro-campo {
+        @apply cursor-pointer;
+    }
+    .filtros-acciones {
+        @apply flex items-center gap-3 shrink-0;
+    }
+    .filtro-boton {
+        @apply inline-flex items-center justify-center gap-2 whitespace-nowrap bg-blue-700 hover:bg-blue-800 text-white px-5 py-2.5 border border-transparent rounded-xl font-extrabold text-sm shadow-md transition-all;
+    }
+    .filtro-limpiar {
+        @apply text-xs font-bold text-red-500 hover:underline whitespace-nowrap;
+    }
+}
+
 /* Edge agrega su propio "ojito" a las contraseñas: se oculta porque el sistema ya tiene el suyo */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {

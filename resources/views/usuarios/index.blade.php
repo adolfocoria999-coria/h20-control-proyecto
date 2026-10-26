@@ -48,25 +48,25 @@
             @endif
 
             <!-- FILTROS (se aplican en el servidor para poder paginar) -->
-            <form method="GET" action="{{ route('usuarios.index') }}" class="mb-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <form method="GET" action="{{ route('usuarios.index') }}" class="filtros mb-4">
+                <div class="filtros-campos lg:grid-cols-3">
                     <div>
-                        <label for="nombre" class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">Nombre o Email</label>
-                        <input type="text" name="nombre" id="nombre" value="{{ request('nombre') }}" placeholder="🔍 Buscar por nombre o email..." class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50">
+                        <label for="nombre" class="filtro-etiqueta">Nombre o Email</label>
+                        <input type="text" name="nombre" id="nombre" value="{{ request('nombre') }}" placeholder="🔍 Buscar por nombre o email..." class="filtro-campo">
                     </div>
                     <div>
-                        <label for="ci" class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">Carnet de Identidad</label>
-                        <input type="text" name="ci" id="ci" value="{{ request('ci') }}" placeholder="💳 Buscar por CI..." class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50">
+                        <label for="ci" class="filtro-etiqueta">Carnet de Identidad</label>
+                        <input type="text" name="ci" id="ci" value="{{ request('ci') }}" placeholder="💳 Buscar por CI..." class="filtro-campo">
                     </div>
                     <div>
-                        <label for="telefono" class="block text-xs font-black uppercase text-blue-950 tracking-wider mb-1.5 ml-1">Teléfono / WhatsApp</label>
-                        <input type="text" name="telefono" id="telefono" value="{{ request('telefono') }}" placeholder="📱 Buscar por teléfono..." class="w-full px-4 py-2.5 bg-white/90 focus:bg-white rounded-xl border border-sky-300 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-semibold text-blue-950 shadow-sm transition-all placeholder-sky-800/50">
+                        <label for="telefono" class="filtro-etiqueta">Teléfono / WhatsApp</label>
+                        <input type="text" name="telefono" id="telefono" value="{{ request('telefono') }}" placeholder="📱 Buscar por teléfono..." class="filtro-campo">
                     </div>
                 </div>
-                <div class="flex items-center gap-3 mt-3">
-                    <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2.5 rounded-xl font-extrabold text-sm shadow-md transition-all">🔍 Buscar</button>
+                <div class="filtros-acciones">
+                    <button type="submit" class="filtro-boton">🔍 Buscar</button>
                     @if(request('nombre') || request('ci') || request('telefono'))
-                        <a href="{{ route('usuarios.index') }}" class="text-xs font-bold text-red-500 hover:underline">Limpiar filtros</a>
+                        <a href="{{ route('usuarios.index') }}" class="filtro-limpiar">Limpiar filtros</a>
                     @endif
                 </div>
             </form>

@@ -55,52 +55,56 @@
             </div>
 
             <!-- Filtros -->
-            <form method="GET" action="{{ route('historial.index') }}" class="bg-white p-5 rounded-2xl shadow-md border border-sky-100">
+            <form method="GET" action="{{ route('historial.index') }}" class="space-y-2">
                 <input type="hidden" name="seccion" value="{{ $filtros['seccion'] }}">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div>
-                        <label for="gestion" class="{{ $label }}">Año</label>
-                        <select name="gestion" id="gestion" onchange="this.form.submit()" class="{{ $input }} cursor-pointer">
-                            @foreach($gestiones as $anio)
-                                <option value="{{ $anio }}" {{ $filtros['gestion'] == $anio ? 'selected' : '' }}>{{ $anio }}</option>
-                            @endforeach
-                        </select>
+                <div class="filtros">
+                    <div class="filtros-campos lg:grid-cols-5">
+                        <div>
+                            <label for="gestion" class="filtro-etiqueta">Año</label>
+                            <select name="gestion" id="gestion" onchange="this.form.submit()" class="filtro-campo">
+                                @foreach($gestiones as $anio)
+                                    <option value="{{ $anio }}" {{ $filtros['gestion'] == $anio ? 'selected' : '' }}>{{ $anio }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="mes" class="filtro-etiqueta">Mes</label>
+                            <select name="mes" id="mes" onchange="this.form.submit()" class="filtro-campo">
+                                <option value="todos" {{ $filtros['mes'] === null ? 'selected' : '' }}>Todo el año</option>
+                                @foreach(Meses::NOMBRES as $num => $nombre)
+                                    <option value="{{ $num }}" {{ $filtros['mes'] === $num ? 'selected' : '' }}>{{ $nombre }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="modulo" class="filtro-etiqueta">Módulo</label>
+                            <select name="modulo" id="modulo" onchange="this.form.submit()" class="filtro-campo">
+                                <option value="">Todos</option>
+                                @foreach(Actividad::MODULOS as $clave => $nombre)
+                                    <option value="{{ $clave }}" {{ $filtros['modulo'] === $clave ? 'selected' : '' }}>{{ $nombre }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="accion" class="filtro-etiqueta">Acción</label>
+                            <select name="accion" id="accion" onchange="this.form.submit()" class="filtro-campo">
+                                <option value="">Todas</option>
+                                @foreach(array_keys(Actividad::ACCIONES) as $clave)
+                                    <option value="{{ $clave }}" {{ $filtros['accion'] === $clave ? 'selected' : '' }}>{{ (new Actividad(['accion' => $clave]))->accionEtiqueta() }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="buscar" class="filtro-etiqueta">Usuario o descripción</label>
+                            <input type="text" name="buscar" id="buscar" value="{{ $filtros['buscar'] }}" placeholder="🔍 Ej.: María, pago, tarifa..." class="filtro-campo">
+                        </div>
                     </div>
-                    <div>
-                        <label for="mes" class="{{ $label }}">Mes</label>
-                        <select name="mes" id="mes" onchange="this.form.submit()" class="{{ $input }} cursor-pointer">
-                            <option value="todos" {{ $filtros['mes'] === null ? 'selected' : '' }}>Todo el año</option>
-                            @foreach(Meses::NOMBRES as $num => $nombre)
-                                <option value="{{ $num }}" {{ $filtros['mes'] === $num ? 'selected' : '' }}>{{ $nombre }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label for="modulo" class="{{ $label }}">Módulo</label>
-                        <select name="modulo" id="modulo" onchange="this.form.submit()" class="{{ $input }} cursor-pointer">
-                            <option value="">Todos</option>
-                            @foreach(Actividad::MODULOS as $clave => $nombre)
-                                <option value="{{ $clave }}" {{ $filtros['modulo'] === $clave ? 'selected' : '' }}>{{ $nombre }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label for="accion" class="{{ $label }}">Acción</label>
-                        <select name="accion" id="accion" onchange="this.form.submit()" class="{{ $input }} cursor-pointer">
-                            <option value="">Todas</option>
-                            @foreach(array_keys(Actividad::ACCIONES) as $clave)
-                                <option value="{{ $clave }}" {{ $filtros['accion'] === $clave ? 'selected' : '' }}>{{ (new Actividad(['accion' => $clave]))->accionEtiqueta() }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label for="buscar" class="{{ $label }}">Buscar</label>
-                        <input type="text" name="buscar" id="buscar" value="{{ $filtros['buscar'] }}" placeholder="🔍 Usuario o descripción..." class="{{ $input }}">
+                    <div class="filtros-acciones">
+                        <button type="submit" class="filtro-boton">🔍 Buscar</button>
                     </div>
                 </div>
-                <div class="flex flex-wrap items-center gap-3 mt-4">
-                    <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2.5 rounded-xl font-extrabold text-sm shadow-md">🔍 Buscar</button>
-                    <a href="{{ route('historial.index', ['seccion' => $filtros['seccion']]) }}" class="text-xs font-bold text-red-500 hover:underline">Volver al mes actual</a>
+                <div class="flex flex-wrap items-center gap-3 px-1">
+                    <a href="{{ route('historial.index', ['seccion' => $filtros['seccion']]) }}" class="filtro-limpiar">Volver al mes actual</a>
                     <span class="text-xs font-bold text-sky-800 sm:ml-auto">
                         {{ number_format($actividades->total()) }} registro(s) en {{ $periodo }}
                     </span>

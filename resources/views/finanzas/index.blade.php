@@ -156,38 +156,35 @@
             </div>
             @endif
 
-            <!-- Barra de Filtros y Botón de Excel -->
-            <div class="bg-white p-4 rounded-2xl shadow-md border border-sky-100 flex flex-wrap items-center justify-between gap-4">
-                <form id="formFiltros" method="GET" action="{{ route('finanzas.index') }}" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                    <!-- Filtro Gestión -->
-                    <div class="flex items-center gap-2">
-                        <label for="gestion" class="text-sm font-extrabold text-blue-950 whitespace-nowrap">Gestión:</label>
-                        <select name="gestion" id="gestion" onchange="aplicarFiltro(this.form)" class="bg-sky-50 border border-sky-200 text-blue-950 font-bold text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[170px] px-4 py-2.5 cursor-pointer">
+            <!-- Filtros -->
+            <form id="formFiltros" method="GET" action="{{ route('finanzas.index') }}" class="filtros" onsubmit="guardarFiltro(this)">
+                <div class="filtros-campos lg:grid-cols-2">
+                    <div>
+                        <label for="gestion" class="filtro-etiqueta">Gestión</label>
+                        <select name="gestion" id="gestion" onchange="aplicarFiltro(this.form)" class="filtro-campo">
                             <option value="">Todas las gestiones</option>
                             @foreach(range(date('Y'), date('Y')-5) as $year)
                                 <option value="{{ $year }}" {{ request('gestion') == $year ? 'selected' : '' }}>{{ $year }}</option>
                             @endforeach
                         </select>
                     </div>
-
-                    <!-- Filtro Mes -->
-                    <div class="flex items-center gap-2">
-                        <label for="mes" class="text-sm font-extrabold text-blue-950 whitespace-nowrap">Mes:</label>
-                        <select name="mes" id="mes" onchange="aplicarFiltro(this.form)" class="bg-sky-50 border border-sky-200 text-blue-950 font-bold text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[160px] px-4 py-2.5 cursor-pointer">
+                    <div>
+                        <label for="mes" class="filtro-etiqueta">Mes</label>
+                        <select name="mes" id="mes" onchange="aplicarFiltro(this.form)" class="filtro-campo">
                             <option value="">Todos los meses</option>
                             @foreach(\App\Support\Meses::NOMBRES as $num => $nombre)
                                 <option value="{{ $num }}" {{ $mes == $num ? 'selected' : '' }}>{{ $nombre }}</option>
                             @endforeach
                         </select>
                     </div>
-                </form>
-                
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('finanzas.index') }}" onclick="limpiarFiltrosGuardados()" class="text-xs font-bold text-red-500 hover:underline {{ (request('gestion') || request('mes')) ? '' : 'hidden' }}" id="btnLimpiar">
-                        Limpiar Filtros
-                    </a>
                 </div>
-            </div>
+                <div class="filtros-acciones">
+                    <button type="submit" class="filtro-boton">🔍 Buscar</button>
+                    @if(request('gestion') || request('mes'))
+                        <a href="{{ route('finanzas.index') }}" onclick="limpiarFiltrosGuardados()" class="filtro-limpiar" id="btnLimpiar">Limpiar filtros</a>
+                    @endif
+                </div>
+            </form>
 
             @if(session('success'))
             <div class="mb-6 p-4 bg-sky-100/90 border-l-4 border-sky-600 rounded-r-xl flex items-center shadow-md">
@@ -336,16 +333,20 @@
         }
 
         // --- MANEJO DE MEMORIA DE FILTROS ---
-        function aplicarFiltro(form) {
+        // Recuerda el filtro elegido para volver a él después de registrar o editar un balance
+        function guardarFiltro(form) {
             const gestion = form.gestion.value;
             const mes = form.mes.value;
-            
+
             if (gestion) sessionStorage.setItem('finanzas_gestion', gestion);
             else sessionStorage.removeItem('finanzas_gestion');
 
             if (mes) sessionStorage.setItem('finanzas_mes', mes);
             else sessionStorage.removeItem('finanzas_mes');
+        }
 
+        function aplicarFiltro(form) {
+            guardarFiltro(form);
             form.submit();
         }
 
